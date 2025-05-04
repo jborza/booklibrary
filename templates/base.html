@@ -72,9 +72,10 @@
                             Search
                         </a>
                     </h6>
-                    <form class="px-3">
+                    <form class="px-3" action="/search" method="get">
                         <div class="form-group">
-                            <input type="text" class="form-control form-control-sm" placeholder="Search books...">
+                            <input type="text" class="form-control form-control-sm"  name="search_query" id="search_query"
+                            placeholder="Search books..." value="the chronology of water">
                         </div>
                         <button type="submit" class="btn btn-primary btn-block btn-sm">Search</button>
                     </form>

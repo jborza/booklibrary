@@ -3,4 +3,14 @@
 {% block content %}
     <h1>Search Books</h1>
     <p>This is the search page content.</p>
+    <p>You searched for: <strong>{{ query }}</strong></p>
+    {% if results %}
+        <ul>
+            {% for result in results %}
+                <li>{{ result }}</li>  {# Replace with actual result data #}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found.</p>
+    {% endif %}
 {% endblock %}
