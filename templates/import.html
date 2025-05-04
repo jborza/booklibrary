@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Books{% endblock %}
+{% block content %}
+    <h4>Import</h4>
+    <form method="POST"  enctype="multipart/form-data">
+        <label for="file">Import your Goodreads books:</label>
+        <a href="https://help.goodreads.com/s/article/How-do-I-import-or-export-my-books-1553870934590" target="_blank">How to export</a>
+        <p>Export your books from Goodreads and upload the CSV or JSON file here.</p>
+        <input type="file" name="file" accept=".csv, .json" required>
+        <button type="submit">Import</button>
+    </form>
+{%endblock%}
