@@ -1,0 +1,12 @@
+.sidebar {
+    background-color: #f8f9fa; /* Light grey background */
+    padding: 20px;
+}
+.sidebar-heading {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: .05rem;
+    color: #6c757d; /* Bootstrap's secondary text color */
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
