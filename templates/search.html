@@ -36,6 +36,19 @@
                 {% if result.rating %}
                     <p class="card-text">Rating: {{ result.rating }}</p>
                 {% endif %}
+                <form method="POST" action="{{ url_for('books.add_book') }}">
+                    <input type="hidden" name="title" value="{{ result.title }}">
+                    <input type="hidden" name="author_name" value="{{ result.author_name }}">
+                    <input type="hidden" name="year_published" value="{{ result.year_published }}">
+                    <input type="hidden" name="isbn" value="{{ result.isbn }}">
+                    <input type="hidden" name="genre" value="{{ result.genre }}">
+                    <input type="hidden" name="language" value="{{ result.language }}">
+                    <input type="hidden" name="synopsis" value="{{ result.synopsis }}">
+                    <input type="hidden" name="cover_image" value="{{ result.cover_image }}">
+                    <button type="submit" class="btn btn-primary">Add to collection</button>
+                </form>
+                <hr />
+                <pre>{{result}}</pre>
             </div>
             </div>
         </div>

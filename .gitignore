@@ -4,3 +4,4 @@ sample-data/
 __pycache__/
 *.sqlite
 *.db
+static/covers/
