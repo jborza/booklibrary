@@ -1,3 +1,4 @@
 .env
 .venv/
 sample-data/
+__pycache__/
