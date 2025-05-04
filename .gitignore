@@ -2,3 +2,5 @@
 .venv/
 sample-data/
 __pycache__/
+*.sqlite
+*.db

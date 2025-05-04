@@ -8,9 +8,13 @@
         {% if results|length > 0 %}
         {% set result = results %}
         <div class="card">
+            <div class="row no-gutters">
+            <div class="col-md-3">
             {% if result.cover_image %}
                 <img src="{{ result.cover_image }}" class="card-img-top cover-image" alt="Cover Image" >
             {% endif %}
+            </div>
+            <div class="col-md-9">
             <div class="card-body">
                 <h5 class="card-title">{{ result.title }}</h5>
                 <h6 class="card-subtitle mb-2 text-muted">By {{ result.author_name }}</h6>
@@ -30,6 +34,8 @@
                     <p class="card-text">ISBN: {{ result.isbn }}</p>
                 {% endif %}
             </div>
+            </div>
+        </div>
         </div>
         {% else %}
             <p>No results found.</p>
