@@ -10,7 +10,7 @@ class Book(db.Model):
     isbn = db.Column(db.String(20))  # ISBN number
     rating = db.Column(db.Float)
     book_type = db.Column(db.String(20))  # ebook, audiobook, physical
-    status = db.Column(db.String(20))  # to read, read, wishlist
+    status = db.Column(db.String(20))  # to read, reading, read, wishlist
     genre = db.Column(db.Text) # List of genres (e.g., fiction, non-fiction, etc.)
     language = db.Column(db.String(20))  # Language of the book
     synopsis = db.Column(db.Text)
