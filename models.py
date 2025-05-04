@@ -7,7 +7,7 @@ class Book(db.Model):
     title = db.Column(db.String(200), nullable=False)
     author_name = db.Column(db.String(100), nullable=False)  # Redundant for easier querying
     year_published = db.Column(db.Integer)
-    isbn = db.Column(db.String(20), unique=True, nullable=False)  # ISBN number
+    isbn = db.Column(db.String(20))  # ISBN number
     rating = db.Column(db.Float)
     book_type = db.Column(db.String(20))  # ebook, audiobook, physical
     status = db.Column(db.String(20))  # to read, read, wishlist

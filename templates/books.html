@@ -6,14 +6,13 @@
         {% for book in books %}
         <div class="book-item">
             <li>
+            {% if book.cover_image_tiny %}
                 <img src="{{ url_for('static', filename=book.cover_image_tiny) }}" alt="Cover Image" class="cover-image-tiny" >
+            {% endif %}
                 <a href="{{ url_for('book.book_detail', book_id=book.id) }}">{{ book.title }}</a> by {{ book.author_name }}
             </li>
         </div>
         {% endfor %}
     </ul>
 
-    <script>
-        showBlurhashImages();
-    </script>
 {% endblock %}

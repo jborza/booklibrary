@@ -13,7 +13,7 @@
         </form>
     </div>
     <div class="p-3">
-        <form method="POST"  enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('import.import_notes') }}" enctype="multipart/form-data">
             Import your books from notes:
             <p>
                 Format: title - author <br />
