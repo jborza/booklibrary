@@ -10,3 +10,10 @@
     margin-top: 1rem;
     margin-bottom: 0.5rem;
 }
+
+.cover-image {
+    max-width: 200px;
+    max-height: 300px;
+    width: auto; /* Maintain aspect ratio */
+    height: auto; /* Maintain aspect ratio */
+}
