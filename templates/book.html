@@ -5,8 +5,12 @@
     <div class="row no-gutters">
     <div class="col-md-3">
         {% if book.cover_image %}
-            <img src="{{ url_for('static', filename=book.cover_image) }}" class="card-img-top cover-image" alt="Cover Image">
+        <div class="thumbnail-bg-container">
+            <div class="thumbnail-bg" style="background-image: url('{{ url_for('static', filename=book.cover_image) }}');"></div>
+            <img class="thumbnail-foreground" src="{{ url_for('static', filename=book.cover_image) }}" alt="Book cover">
+          </div>
         {% endif %}
+
     </div>
     <div class="col-md-9">
         <div class="card-body">

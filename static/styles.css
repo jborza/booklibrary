@@ -24,3 +24,39 @@
     width: auto; /* Maintain aspect ratio */
     height: auto; /* Maintain aspect ratio */
 }
+
+.thumbnail-bg-container {
+    position: relative;
+    width: 300px;   /* match to your needs */
+    height: 450px;  /* match to your needs */
+  }
+  
+  .thumbnail-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(32px) brightness(0.8);
+    z-index: 1;
+    border-radius: 16px;
+  }
+  
+  .thumbnail-bg-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(0,0,0,0.18));
+    z-index: 2;
+    border-radius: 16px;
+    pointer-events: none;
+  }
+  
+  .thumbnail-foreground {
+    position: relative;
+    width: 200px;   /* adjust as needed */
+    height: 300px;  /* adjust as needed */
+    z-index: 3;
+    display: block;
+    margin: 60px auto 0 auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    border-radius: 8px;
+  }
