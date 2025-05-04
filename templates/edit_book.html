@@ -57,6 +57,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Update Book</button>
         <button class="btn btn-secondary" onclick="regenerateThumbnail({{ book.id }})">Regenerate Thumbnail</button>
+        <button type="button" class="btn btn-info" onclick="searchOpenLibrary({{ book.id }})">Search OpenLibrary</button>
 
         <a href="{{ url_for('book.book_detail', book_id=book.id) }}" class="btn btn-secondary">Cancel</a>
     </form>
@@ -74,6 +75,34 @@
                 alert('Error initiating other action.');
             }
         });
+    }
+
+    function searchOpenLibrary(bookId) {
+        fetch('/book/' + bookId + '/openlibrary_search', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // TODO fill in the form fields with the data from OpenLibrary
+                document.getElementById('title').value = data.title || '';
+                document.getElementById('author_name').value = data.author_name || '';
+                document.getElementById('year_published').value = data.year_published || '';
+                document.getElementById('isbn').value = data.isbn || '';
+                document.getElementById('genres').value = data.genres ? data.genres.join(', ') : '';
+                document.getElementById('book_type').value = data.book_type || 'ebook';
+                document.getElementById('status').value = data.status || 'read';
+                document.getElementById('series').value = data.series || '';
+                document.getElementById('tags').value = data.tags ? data.tags.join(', ') : '';
+                // page count? 
+                // cover image?
+                if (data.cover_image) {
+                    document.getElementById('cover_image').src = data.cover_image;
+                }
+            })
     }
     </script>
 {% endblock %}

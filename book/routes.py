@@ -1,6 +1,7 @@
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from models import Book, db
 from .thumbnails import generate_thumbnail
+from metadata.openlibrary import get_book_data
 
 book_bp = Blueprint('book', __name__, url_prefix='/book')
 
@@ -35,9 +36,10 @@ def edit_book(book_id):
             book.review = request.form['review']
         if 'page_count' in request.form:
             book.page_count = request.form['page_count']
-        if 'series' in request.form:
+        # TODO handle 'None' values better
+        if 'series' in request.form and request.form['series'] != 'None':
             book.series = request.form['series']
-        if 'tags' in request.form:
+        if 'tags' in request.form and request.form['tags'] != 'None':
             book.tags = request.form['tags']
         # TODO handle cover image upload
         # book.cover_image = request.form['cover_image']
@@ -54,3 +56,11 @@ def regenerate_thumbnail(book_id):
     # save the new thumbnail to book.cover_image
     generate_thumbnail(book)
     return jsonify({'success': True})
+
+@book_bp.route('/<int:book_id>/openlibrary_search')
+def openlibrary_search(book_id):
+    book = Book.query.get_or_404(book_id)
+    # construct the search query
+    query = f"{book.title}"
+    results = get_book_data(query)
+    return jsonify(results)
