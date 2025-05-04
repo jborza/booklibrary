@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from models import Book, db
 from .thumbnails import generate_thumbnail
 
@@ -16,21 +16,34 @@ def edit_book(book_id):
     if request.method == 'POST':
         book.title = request.form['title']
         book.author_name = request.form['author_name']
-        book.year_published = request.form['year_published']
-        book.isbn = request.form['isbn']
-        book.rating = request.form['rating']
-        book.book_type = request.form['book_type']
-        book.status = request.form['status']
-        book.genre = request.form['genre']
-        book.language = request.form['language']
-        book.synopsis = request.form['synopsis']
-        book.review = request.form['review']
-        book.cover_image = request.form['cover_image']
-        book.page_count = request.form['page_count']
-        book.series = request.form['series']
-        book.tags = request.form['tags']
+        book.year_published = request.form['year_published'] if request.form['year_published'] else None
+        if 'isbn' in request.form:
+            book.isbn = request.form['isbn']
+        if 'rating' in request.form:
+            book.rating = request.form['rating'] 
+        if 'book_type' in request.form:
+            book.book_type = request.form['book_type']
+        if 'status' in request.form:
+            book.status = request.form['status']
+        if 'genre' in request.form:
+            book.genre = request.form['genre']
+        if 'language' in request.form:
+            book.language = request.form['language']
+        if 'synopsis' in request.form:
+            book.synopsis = request.form['synopsis']
+        if 'review' in request.form:
+            book.review = request.form['review']
+        if 'page_count' in request.form:
+            book.page_count = request.form['page_count']
+        if 'series' in request.form:
+            book.series = request.form['series']
+        if 'tags' in request.form:
+            book.tags = request.form['tags']
+        # TODO handle cover image upload
+        # book.cover_image = request.form['cover_image']
 
         db.session.commit()
+        flash(f"Book saved", 'success')  
         return redirect(url_for('book.book_detail', book_id=book.id))
     return render_template('edit_book.html', book=book)
 

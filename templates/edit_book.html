@@ -15,9 +15,38 @@
             <label for="year_published">Year Published:</label>
             <input type="number" class="form-control" id="year_published" name="year_published" value="{{ book.year_published }}">
         </div>
+        <div class="form-group">
+            <label for="isbn">ISBN:</label>
+            <input type="text" class="form-control" id="isbn" name="isbn" value="{{ book.isbn }}">
+        </div>
          <div class="form-group">
             <label for="genres">Genres (comma-separated):</label>
             <input type="text" class="form-control" id="genres" name="genres" value="{% for genre in book.genres %}{{ genre.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+        </div>
+        <div class="form-group">
+            <label for="book_type">Book Type:</label>
+            <select class="form-control" id="book_type" name="book_type">
+                <option value="ebook" {% if book.book_type == 'ebook' %}selected{% endif %}>Ebook</option>
+                <option value="physical" {% if book.book_type == 'physical' %}selected{% endif %}>Physical</option>
+                <option value="audiobook" {% if book.book_type == 'audiobook' %}selected{% endif %}>Audiobook</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select class="form-control" id="status" name="status">
+                <option value="read" {% if book.status == 'read' %}selected{% endif %}>Read</option>
+                <option value="currently_reading" {% if book.status == 'currently_reading' %}selected{% endif %}>Currently Reading</option>
+                <option value="want_to_read" {% if book.status == 'want_to_read' %}selected{% endif %}>Want to Read</option>
+                <option value="wishlist" {% if book.status == 'wishlist' %}selected{% endif %}>Wishlist</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="series">Series:</label>
+            <input type="text" class="form-control" id="series" name="series" value="{{ book.series }}">
+        </div>
+        <div class="form-group">
+            <label for="tags">Tags (comma-separated):</label>
+            <input type="text" class="form-control" id="tags" name="tags" value="{{ book.tags }}">
         </div>
         <div class="form-group">
             <label for="cover_image">Cover Image:</label>
