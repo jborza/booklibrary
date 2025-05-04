@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from models import Book, db
 from metadata.openlibrary import get_book_data
-
+from book.thumbnails import make_tiny_cover_image, download_cover_image
 book_bp = Blueprint('book', __name__, url_prefix='/book')
 
 @book_bp.route('/<int:book_id>')
@@ -55,4 +55,16 @@ def openlibrary_search(book_id):
     # construct the search query
     query = f"{book.title}"
     results = get_book_data(query)
+    if len(results) == 0:
+        flash("No results found", 'error')
+        return redirect(url_for('book.book_detail', book_id=book.id))
+    # download the covers
+    if 'cover_image' in results:
+        cover_image_url = results['cover_image']
+        cover_image = download_cover_image(cover_image_url)
+        cover_image_tiny = make_tiny_cover_image(cover_image)
+        # update the book object with the new cover image
+        book.cover_image = cover_image
+        book.cover_image_tiny = cover_image_tiny
+        db.session.commit()
     return jsonify(results)
