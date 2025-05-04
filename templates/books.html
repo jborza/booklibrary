@@ -4,16 +4,12 @@
     <h4>Books</h4>
     <ul>
         {% for book in books %}
+        <div class="book-item">
             <li>
                 <img src="{{ url_for('static', filename=book.cover_image_tiny) }}" alt="Cover Image" class="cover-image-tiny" >
                 <a href="{{ url_for('book.book_detail', book_id=book.id) }}">{{ book.title }}</a> by {{ book.author_name }}
             </li>
-            <div class="book-item">
-                <a href="{{ url_for('book.book_detail', book_id=book.id) }}">
-                    <div class="blurhash-container" data-blurhash="{{ book.cover_thumbnail }}" style="width: 100px; height: 150px;"></div>
-                    {{ book.title }} by {{ book.author_name }}
-                </a>
-            </div>
+        </div>
         {% endfor %}
     </ul>
 
