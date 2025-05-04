@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ book.title }}{% endblock %}
+{% block content %}
+    <h1>Edit Book</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ book.title }}" required>
+        </div>
+        <div class="form-group">
+            <label for="author">Author:</label>
+            <input type="text" class="form-control" id="author_name" name="author_name" value="{{ book.author_name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="year_published">Year Published:</label>
+            <input type="number" class="form-control" id="year_published" name="year_published" value="{{ book.year_published }}">
+        </div>
+         <div class="form-group">
+            <label for="genres">Genres (comma-separated):</label>
+            <input type="text" class="form-control" id="genres" name="genres" value="{% for genre in book.genres %}{{ genre.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+        </div>
+        <div class="form-group">
+            <label for="cover_image">Cover Image:</label>
+            <input type="file" class="form-control-file" id="cover_image" name="cover_image">
+            {% if book.cover_image %}
+                <img src="{{ url_for('static', filename=book.cover_image) }}" alt="Current Cover Image" width="100">
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Book</button>
+        <a href="{{ url_for('book.book_detail', book_id=book.id) }}" class="btn btn-secondary">Cancel</a>
+    </form>
+{% endblock %}
