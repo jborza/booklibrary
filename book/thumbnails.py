@@ -34,6 +34,7 @@ def download_cover_image(cover_image_url):
         filename = Path(parsed_url.path).name
 
         # Save the image to the 'covers' directory
+        os.makedirs('./static/covers', exist_ok=True)  
         filepath = os.path.join('./static', 'covers', filename)
         with open(filepath, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
