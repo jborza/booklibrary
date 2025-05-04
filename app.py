@@ -9,6 +9,7 @@ Flask application for a book management system.
     Render templates to display content.
 
 """
+import secrets
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Book  
 from search.routes import search_bp
@@ -19,6 +20,7 @@ from tools.routes import import_bp
 app = Flask(__name__, static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = secrets.token_hex(16) # Generate a random secret key
 db.init_app(app)
 
 app.register_blueprint(search_bp)

@@ -1,8 +1,9 @@
 import csv
 from io import StringIO
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, redirect, render_template, request, url_for, flash, session
 from metadata.openlibrary import get_book_data
 from models import Book, db
+
 
 import_bp = Blueprint('import', __name__, url_prefix='/import')
 
@@ -17,6 +18,7 @@ def import_notes():
         notes_data = request.form['notes']  # Access the textarea data
         # Process the notes data as needed
         lines = notes_data.splitlines()
+        imported_count = 0
 
         for line in lines:
             # Try both formats: "title - author" and "title (author)"
@@ -50,8 +52,10 @@ def import_notes():
                 author_name=author_name,
                 book_type=format,)
             db.session.add(book)
+            imported_count += 1
         db.session.commit()
         # Redirect to the books page after importing
+        flash(f"Successfully imported {imported_count} books!", 'success')  # Flash the message
         return redirect(url_for('books.list_books'))
 
     return render_template('import_notes.html')
@@ -67,66 +71,75 @@ def import_csv():
             return "No selected file", 400
 
         if csv_file:
-            csv_text = csv_file.read().decode('utf-8')
-            csv_data = StringIO(csv_text)
-            reader = csv.DictReader(csv_data)
+            try:
+                csv_text = csv_file.read().decode('utf-8')
+                csv_data = StringIO(csv_text)
+                reader = csv.DictReader(csv_data)
+                imported_count = 0
 
-            for row in reader:
-                title = row.get('Title')
-                author_name = row.get('Author')
-                isbn = row.get('ISBN')
-                isbn13 = row.get('ISBN13')
-                isbn = ", ".join([s for s in [isbn, isbn13] if s is not None])
+                for row in reader:
+                    title = row.get('Title')
+                    author_name = row.get('Author')
+                    isbn = row.get('ISBN')
+                    isbn13 = row.get('ISBN13')
+                    isbn = ", ".join([s for s in [isbn, isbn13] if s is not None])
 
-                average_rating = row.get('Average Rating')
-                number_of_pages = row.get('Number of Pages')
-                year_published = row.get('Year Published')
-                bookshelves = row.get('Bookshelves')
+                    average_rating = row.get('Average Rating')
+                    number_of_pages = row.get('Number of Pages')
+                    year_published = row.get('Year Published')
+                    bookshelves = row.get('Bookshelves')
 
-                # Check for required fields
-                if not all([title, author_name]):
-                    print(f"Skipping row with missing data: {row}")
-                    continue
+                    # Check for required fields
+                    if not all([title, author_name]):
+                        print(f"Skipping row with missing data: {row}")
+                        continue
 
-                # Convert data types
-                try:
-                    average_rating = float(average_rating) if average_rating else None
-                    number_of_pages = int(number_of_pages) if number_of_pages else None
-                    year_published = int(year_published)
-                except ValueError as e:
-                    print(f"Skipping row due to invalid data: {row} - {e}")
-                    continue
+                    # Convert data types
+                    try:
+                        average_rating = float(average_rating) if average_rating else None
+                        number_of_pages = int(number_of_pages) if number_of_pages else None
+                        year_published = int(year_published)
+                    except ValueError as e:
+                        print(f"Skipping row due to invalid data: {row} - {e}")
+                        continue
 
-                # Create the book
-                book = Book(
-                    title=title,
-                    author_name=author_name,
-                    year_published=year_published,
-                    isbn=isbn,
-                    rating=average_rating,
-                    page_count=number_of_pages,
-                    # Add other fields as needed
-                )
+                    # Create the book
+                    book = Book(
+                        title=title,
+                        author_name=author_name,
+                        year_published=year_published,
+                        isbn=isbn,
+                        rating=average_rating,
+                        page_count=number_of_pages,
+                        # Add other fields as needed
+                    )
 
-                # Handle bookshelves - can be currently-reading, to-read, read
-                if bookshelves:
-                    bookshelves = [shelf.strip() for shelf in bookshelves.split(',')]
-                    # maybe just use the shelf name as status
-                    for shelf in bookshelves:
-                        if shelf == 'currently-reading':
-                            book.status = 'currently-reading'
-                        elif shelf == 'to-read':
-                            book.status = 'to-read'
-                        elif shelf == 'read':
-                            book.status = 'read'
-                        elif shelf == 'wishlist':
-                            book.status = 'wishlist'
-                
-                db.session.add(book)
+                    # Handle bookshelves - can be currently-reading, to-read, read
+                    if bookshelves:
+                        bookshelves = [shelf.strip() for shelf in bookshelves.split(',')]
+                        # maybe just use the shelf name as status
+                        for shelf in bookshelves:
+                            if shelf == 'currently-reading':
+                                book.status = 'currently-reading'
+                            elif shelf == 'to-read':
+                                book.status = 'to-read'
+                            elif shelf == 'read':
+                                book.status = 'read'
+                            elif shelf == 'wishlist':
+                                book.status = 'wishlist'
+                    
+                    db.session.add(book)
+                    imported_count += 1
 
-            db.session.commit()
-            # Redirect to the books page after importing
-            # TODO figure out a way to show import status - the same in the import_notes
-            return redirect(url_for('books.list_books'))
+                db.session.commit()
+                # Redirect to the books page after importing
+                # TODO figure out a way to show import status - the same in the import_notes
+                flash(f"Successfully imported {imported_count} books!", 'success')  # Flash the message
+                    
+                return redirect(url_for('books.list_books'))
+            except Exception as e:
+                print(f"Error processing CSV file: {e}")
+                flash("Error processing CSV file", 'danger')
+                return "Error processing CSV file", 500
 
     return render_template('goodreads_import_form.html')
