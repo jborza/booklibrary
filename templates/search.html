@@ -33,6 +33,9 @@
                 {% if result.isbn %}
                     <p class="card-text">ISBN: {{ result.isbn }}</p>
                 {% endif %}
+                {% if result.rating %}
+                    <p class="card-text">Rating: {{ result.rating }}</p>
+                {% endif %}
             </div>
             </div>
         </div>
