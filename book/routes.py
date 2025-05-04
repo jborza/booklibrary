@@ -61,10 +61,11 @@ def openlibrary_search(book_id):
     # download the covers
     if 'cover_image' in results:
         cover_image_url = results['cover_image']
-        cover_image = download_cover_image(cover_image_url)
-        cover_image_tiny = make_tiny_cover_image(cover_image)
-        # update the book object with the new cover image
-        book.cover_image = cover_image
-        book.cover_image_tiny = cover_image_tiny
-        db.session.commit()
+        if cover_image_url is not None:
+            cover_image = download_cover_image(cover_image_url)
+            cover_image_tiny = make_tiny_cover_image(cover_image)
+            # update the book object with the new cover image
+            book.cover_image = cover_image
+            book.cover_image_tiny = cover_image_tiny
+            db.session.commit()
     return jsonify(results)
