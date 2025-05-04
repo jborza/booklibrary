@@ -2,8 +2,14 @@
 {% block title %}{{ book.title }}{% endblock %}
 {% block content %}
     <h1>{{ book.title }}</h1>
-    <p>By: {{ book.author.name }}</p>
+    <p>By: {{ book.author_name }}</p>
     <p>Published: {{ book.year_published }}</p>
     {# Display other book details as needed #}
-    <pre>{{book}}</pre>
+
+    <h2>Book Details (for debugging)</h2>
+    <ul>
+        {% for attribute in book.__dict__ %}
+            <li><strong>{{ attribute }}:</strong> {{ book.__dict__[attribute] }}</li>
+        {% endfor %}
+    </ul>
 {% endblock %}

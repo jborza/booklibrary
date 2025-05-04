@@ -13,6 +13,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from models import db, Book  
 from search.routes import search_bp
 from books.routes import books_bp  
+from book.routes import book_bp
 
 app = Flask(__name__, static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
@@ -21,6 +22,7 @@ db.init_app(app)
 
 app.register_blueprint(search_bp)
 app.register_blueprint(books_bp)
+app.register_blueprint(book_bp)
 
 @app.route('/')
 def home():
