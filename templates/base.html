@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <div class="menu">
+        <ul>
+            <input type="text" placeholder="Search books...">
+            <li><a href="/search">Search</a></li>
+            <li><a href="/books">All books</a></li>
+            <li><a href="/authors">Authors</a></li>
+            <li><a href="/genres">Genres</a></li>
+            <li><a href="/ebooks">Ebooks</a></li>
+            <li><a href="/physical">Physical</a></li>
+            <li><a href="/audiobooks">Audiobooks</a></li>
+            <li><a href="/read">Read</a></li>
+            <li><a href="/to_read">To read</a></li>
+            <li><a href="/wishlist">Wishlist</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
