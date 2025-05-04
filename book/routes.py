@@ -1,6 +1,5 @@
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from models import Book, db
-from .thumbnails import generate_thumbnail
 from metadata.openlibrary import get_book_data
 
 book_bp = Blueprint('book', __name__, url_prefix='/book')
@@ -49,13 +48,6 @@ def edit_book(book_id):
         return redirect(url_for('book.book_detail', book_id=book.id))
     return render_template('edit_book.html', book=book)
 
-@book_bp.route('/<int:book_id>/regenerate_thumbnail', methods=['POST'])
-def regenerate_thumbnail(book_id):
-    book = Book.query.get_or_404(book_id)
-    # use blurhash
-    # save the new thumbnail to book.cover_image
-    generate_thumbnail(book)
-    return jsonify({'success': True})
 
 @book_bp.route('/<int:book_id>/openlibrary_search')
 def openlibrary_search(book_id):

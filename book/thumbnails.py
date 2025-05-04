@@ -2,33 +2,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 import requests
 from models import Book, db
-import blurhash
-import numpy
 from PIL import Image
 
 import os
 
 THUMBNAIL_SIZE = (64, 64)  # Set the desired thumbnail size
-
-def generate_thumbnail(book):    
-    # make
-    # use blurhash
-    # save the new thumbnail to book.cover_thumbnail
-    source = book.cover_image  
-    img = Image.open(os.path.join('static',source))
-    max_size = 9
-    original_width, original_height = img.size
-    aspect_ratio = original_width / original_height
-    if original_width > original_height:
-        width = max_size
-        height = round(max_size / aspect_ratio)
-    else:
-        height = max_size
-        width = round(max_size * aspect_ratio)
-    encoded = blurhash.encode(numpy.array(img.convert("RGB")), components_x=width, components_y=height)
-    # Save the encoded string to the database or use it as needed
-    book.cover_thumbnail = encoded
-    db.session.commit()
 
 def make_tiny_cover_image(cover_image):
     original_image = Image.open(os.path.join('static',cover_image))    
