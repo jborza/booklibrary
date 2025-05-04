@@ -5,11 +5,35 @@
     <p>This is the search page content.</p>
     <p>You searched for: <strong>{{ query }}</strong></p>
     {% if results %}
-        <ul>
-            {% for result in results %}
-                <li>{{ result }}</li>  {# Replace with actual result data #}
-            {% endfor %}
-        </ul>
+        {% if results|length > 0 %}
+        {% set result = results %}
+        <div class="card">
+            {% if result.cover_image %}
+                <img src="{{ result.cover_image }}" class="card-img-top" alt="Cover Image">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ result.title }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">By {{ result.author_name }}</h6>
+                {% if result.year_published %}
+                    <p class="card-text">Published: {{ result.year_published }}</p>
+                {% endif %}
+                {% if result.genre %}
+                    <p class="card-text">Genre: {{ result.genre }}</p>
+                {% endif %}
+                {% if result.subject %}
+                    <p class="card-text">Subject: {{ result.subject }}</p>
+                {% endif %}
+                {% if result.synopsis %}
+                    <p class="card-text">{{ result.synopsis }}</p>
+                {% endif %}
+                {% if result.isbn %}
+                    <p class="card-text">ISBN: {{ result.isbn }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
     {% else %}
         <p>No results found.</p>
     {% endif %}
