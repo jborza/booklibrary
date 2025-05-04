@@ -1,10 +1,40 @@
 {% extends "base.html" %}
 {% block title %}{{ book.title }}{% endblock %}
 {% block content %}
-    <h1>{{ book.title }}</h1>
-    <p>By: {{ book.author_name }}</p>
-    <p>Published: {{ book.year_published }}</p>
-    {# Display other book details as needed #}
+<div class="card">
+    <div class="row no-gutters">
+    <div class="col-md-3">
+        {% if book.cover_image %}
+            <img src="{{ url_for('static', filename=book.cover_image) }}" class="card-img-top cover-image" alt="Cover Image">
+        {% endif %}
+    </div>
+    <div class="col-md-9">
+        <div class="card-body">
+            <h5 class="card-title">{{ book.title }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">By {{ book.author_name }}</h6>
+            {% if book.year_published %}
+                <p class="card-text">Published: {{ book.year_published }}</p>
+            {% endif %}
+            {% if book.genre %}
+                <p class="card-text">Genre: {{ book.genre }}</p>
+            {% endif %}
+            {% if book.subject %}
+                <p class="card-text">Subject: {{ book.subject }}</p>
+            {% endif %}
+            {% if book.synopsis %}
+                <p class="card-text">{{ book.synopsis }}</p>
+            {% endif %}
+            {% if book.isbn %}
+                <p class="card-text">ISBN: {{ book.isbn }}</p>
+            {% endif %}
+            {% if book.rating %}
+                <p class="card-text">Rating: {{ book.rating }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <a href="{{ url_for('book.edit_book', book_id=book.id) }}" class="btn btn-primary">Edit Book</a>
+
 
     <h2>Book Details (for debugging)</h2>
     <ul>

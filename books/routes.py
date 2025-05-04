@@ -52,7 +52,7 @@ def add_book():
     synopsis = request.form['synopsis']
     cover_image_url = request.form['cover_image']
 
-    # TODO Download the cover image and save it to a local directory
+    # Download the cover image and save it to a local directory
     cover_image = download_cover_image(cover_image_url)
 
     # Create a new book
@@ -72,3 +72,4 @@ def add_book():
 
     db.session.commit()
     return redirect('/books/')
+
