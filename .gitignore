@@ -5,3 +5,6 @@ __pycache__/
 *.sqlite
 *.db
 static/covers/
+
+# notes
+todo.md
