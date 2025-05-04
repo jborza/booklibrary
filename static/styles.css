@@ -17,3 +17,10 @@
     width: auto; /* Maintain aspect ratio */
     height: auto; /* Maintain aspect ratio */
 }
+
+.cover-image-tiny {
+    max-width: 32px;
+    max-height: 32px;
+    width: auto; /* Maintain aspect ratio */
+    height: auto; /* Maintain aspect ratio */
+}

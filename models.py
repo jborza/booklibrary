@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-
 db = SQLAlchemy()
 
 
@@ -17,9 +16,10 @@ class Book(db.Model):
     synopsis = db.Column(db.Text)
     review = db.Column(db.Text)
     cover_image = db.Column(db.String(200))  # URL or path to the cover image
+    cover_image_tiny = db.Column(db.String(200))  # URL or path to the small version of cover image
     page_count = db.Column(db.Integer)  # Number of pages for physical books
     series = db.Column(db.String(100))  # Series name if applicable
     tags = db.Column(db.String(200))  # Comma-separated tags for easy searching
-
+    cover_thumbnail = db.Column(db.Text)  # URL or path to the thumbnail image
     def __repr__(self):
         return f'<Book {self.title}>'

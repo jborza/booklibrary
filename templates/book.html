@@ -34,7 +34,8 @@
     </div>
     
     <a href="{{ url_for('book.edit_book', book_id=book.id) }}" class="btn btn-primary">Edit Book</a>
-
+    <button class="btn btn-secondary" onclick="regenerateThumbnail({{ book.id }})">Regenerate Thumbnail</button>
+    
 
     <h2>Book Details (for debugging)</h2>
     <ul>
@@ -42,4 +43,20 @@
             <li><strong>{{ attribute }}:</strong> {{ book.__dict__[attribute] }}</li>
         {% endfor %}
     </ul>
+    <script>
+        function regenerateThumbnail(bookId) {
+            fetch('/book/' + bookId + '/regenerate_thumbnail', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ book_id: bookId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    alert('Error initiating other action.');
+                }
+            });
+        }
+        </script>
 {% endblock %}

@@ -27,6 +27,24 @@
             {% endif %}
         </div>
         <button type="submit" class="btn btn-primary">Update Book</button>
+        <button class="btn btn-secondary" onclick="regenerateThumbnail({{ book.id }})">Regenerate Thumbnail</button>
+
         <a href="{{ url_for('book.book_detail', book_id=book.id) }}" class="btn btn-secondary">Cancel</a>
     </form>
+    <script>
+    function regenerateThumbnail(bookId) {
+        fetch('/book/' + bookId + '/regenerate_thumbnail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ book_id: bookId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                alert('Error initiating other action.');
+            }
+        });
+    }
+    </script>
 {% endblock %}
