@@ -2,11 +2,27 @@
 {% block title %}Books{% endblock %}
 {% block content %}
     <h4>Import</h4>
-    <form method="POST"  enctype="multipart/form-data">
-        <label for="file">Import your Goodreads books:</label>
-        <a href="https://help.goodreads.com/s/article/How-do-I-import-or-export-my-books-1553870934590" target="_blank">How to export</a>
-        <p>Export your books from Goodreads and upload the CSV or JSON file here.</p>
-        <input type="file" name="file" accept=".csv, .json" required>
-        <button type="submit">Import</button>
-    </form>
+    <div class="p-3">
+        <form method="POST"  enctype="multipart/form-data">
+            <label for="file">Import your Goodreads books:</label>
+            <a href="https://help.goodreads.com/s/article/How-do-I-import-or-export-my-books-1553870934590" target="_blank">How to export</a>
+            <p>Export your books from Goodreads and upload the CSV or JSON file here.</p>
+            <input type="file" name="file" accept=".csv, .json" required>
+            <br/>
+            <button type="submit">Import</button>
+        </form>
+    </div>
+    <div class="p-3">
+        <form method="POST"  enctype="multipart/form-data">
+            Import your books from notes:
+            <p>
+                Format: title - author <br />
+                or <br />
+                title (author)
+            </p>
+            <textarea name="notes" rows="10" cols="50" required></textarea>
+            <br/>
+            <button type="submit">Import</button>
+        </form>
+    </div>
 {%endblock%}
