@@ -19,6 +19,10 @@ class BookImport:
     existing_book: bool = False
     existing_book_id: int = None
 
+class DictToClass:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
 @import_bp.route('/')
 def search():
     # show a page with multiple import options
@@ -27,6 +31,12 @@ def search():
 @import_bp.route('/import_results')
 def import_results():
     import_books = session.get('import_books', [])  # Get from session, default to empty list
+    # find all existing books in the database
+    for book in import_books:
+        book_item = DictToClass(**book)
+        if book_item.existing_book:
+            existing_book = Book.query.get(book_item.existing_book_id)
+            book['existing_book_item'] = existing_book
     return render_template('import_results.html', import_books=import_books)
 
 @import_bp.route('/confirm_import', methods=['POST'])
@@ -104,7 +114,7 @@ def import_notes():
             author_name = author_name.strip()
 
             # Check if the book already exists in the database
-            existing_book = Book.query.filter_by(title=title, author_name=author_name).first()
+            existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
             if existing_book:
                 print(f"Book already exists: {title} by {author_name}")
                 import_book.existing_book = True

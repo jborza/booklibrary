@@ -13,10 +13,30 @@
                 {% if book_result.existing_book %}
 
                 <h6>Existing Book:</h6> 
-                <p>ID: {{ book_result.existing_book_id }}</p>
-                TODO read data from existing books, and display cover
-                
-
+                {% if book_result.existing_book_item.cover_image %}
+                <img class="thumbnail-foreground thumbnail-small" src="{{ url_for('static', filename=book_result.existing_book_item.cover_image) }}" alt="Book cover">
+                {% endif %}
+                <p>ID: {{ book_result.existing_book_item.id }}</p>
+                <p>Title: {{ book_result.existing_book_item.title }}</p>
+                <p>Author: {{ book_result.existing_book_item.author_name }}</p>
+                {% if book_result.existing_book_item.year %}
+                <p>Year: {{ book_result.existing_book_item.year }}</p>
+                {% endif %}
+                {% if book_result.existing_book_item.isbn %}
+                <p>ISBN: {{ book_result.existing_book_item.isbn }}</p>
+                {% endif %}
+                {% if book_result.existing_book_item.book_type %}
+                <p>Book type: {{ book_result.existing_book_item.book_type }}</p>
+                {% endif %}
+                {% if book_result.existing_book_item.status %}
+                <p>Status: {{ book_result.existing_book_item.status }}</p>
+                {% endif %}
+                {% if book_result.existing_book_item.rating %}
+                <p>Rating: {{ book_result.existing_book_item.rating }}</p>
+                {% endif %}
+                {% if book_result.existing_book_item.genre %}
+                <p>Genre: {{ book_result.existing_book_item.genre }}</p>
+                {% endif %}
             </div>
             <div class="col">
                 <h6>Import Data:</h6>
@@ -42,9 +62,9 @@
                 {% endif %}
             </div>
             <div>
-                <input type="radio" id="html" name="action" value="merge" checked>
+                <input type="radio" id="html" name="{{ book_result.existing_book_id}}_action" value="merge" checked>
                 <label for="html">Merge</label>
-                <input type="radio" id="css" name="action" value="add">
+                <input type="radio" id="css" name="{{ book_result.existing_book_id}}_action" value="add">
                 <label for="css">Add</label><br>
             </div>
             {% else %}
