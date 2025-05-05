@@ -16,6 +16,7 @@ from search.search_routes import search_bp
 from books.books_routes import books_bp  
 from book.book_routes import book_bp
 from tools.import_routes import import_bp
+from authors.authors_routes import authors_bp
 
 app = Flask(__name__, static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
@@ -27,6 +28,7 @@ app.register_blueprint(search_bp)
 app.register_blueprint(books_bp)
 app.register_blueprint(book_bp)
 app.register_blueprint(import_bp)
+app.register_blueprint(authors_bp)
 
 @app.route('/')
 def home():
