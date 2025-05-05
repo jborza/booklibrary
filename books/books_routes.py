@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 from flask import Blueprint, app, redirect, render_template, request
+from sqlalchemy import or_
 from models import Book, db
 import requests
 from PIL import Image
@@ -14,6 +15,24 @@ def list_books():
     books = Book.query.all()
     return render_template('books.html', books=books)
 
+@books_bp.route('/search')
+def search_books():
+    query = request.args.get('search_query')
+    if query:        
+        books = Book.query.filter(Book.title.ilike(f'%{query}%')).all()
+        # Search books by title, author, ISBN, or year
+        books = Book.query.filter(
+            or_(
+                # Use ilike for case-insensitive search
+                Book.title.ilike(f'%{query}%'),
+                Book.author_name.ilike(f'%{query}%'),
+                Book.isbn.ilike(f'%{query}%'),
+                Book.year_published.ilike(f'%{query}%')  
+            )
+        ).all()
+    else:
+        books = Book.query.all()
+    return render_template('books.html', books=books, search_query=query)
 
 @books_bp.route('/add_book', methods=['POST'])
 def add_book():

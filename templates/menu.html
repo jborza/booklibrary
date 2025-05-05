@@ -65,13 +65,19 @@
                 🔎 Search
             </a>
         </h6>
-        <form class="px-3" action="/search" method="get">
+        <form class="px-3" action="/search/openlibrary" method="get">
             <div class="form-group">
                 <input type="text" class="form-control form-control-sm"  name="search_query" id="search_query"
                 placeholder="Search books..." value="the chronology of water">
             </div>
-            <button type="submit" class="btn btn-primary btn-block btn-sm">Search</button>
+            <button type="submit" class="btn btn-primary btn-block btn-sm">Search OpenLibrary</button>
         </form>
-        
+        <form class="px-3" action="/search/books" method="get">
+            <div class="form-group">
+                <input type="text" class="form-control form-control-sm"  name="search_query" id="search_query"
+                placeholder="Search books..." value="Architecture">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-sm">Search Books</button>
+        </form>
     </div>
 </nav>
