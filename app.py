@@ -73,6 +73,12 @@ def inject_menu():
                 {'name': 'Import', 'url': '/import', 'icon': '📥'},
                 {'name': 'Export', 'url': '/export', 'icon': '📤'}
             ]
+        },
+        {
+            'title':'',
+            'items': [
+                {'name': 'Add Book', 'url': '/add', 'icon': '➕'},
+            ]
         }
     ]
     print(menu_sections)
