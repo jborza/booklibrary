@@ -24,6 +24,6 @@ def search(query, count=1):
             "cover_image": volume.get("imageLinks", {}).get("thumbnail"),
             "page_count": volume.get("pageCount"),
             "isbn": volume.get("industryIdentifiers", [{}])[0].get("identifier"),
-            "genre": ','.join(volume.get("categories")),
+            "genre": ','.join(volume.get("categories")) if volume.get("categories") else None,
         })
     return results

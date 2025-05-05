@@ -39,14 +39,14 @@
     
     <a href="{{ url_for('book.edit_book', book_id=book.id) }}" class="btn btn-primary">Edit Book</a>
     <button class="btn btn-secondary" onclick="regenerateThumbnail({{ book.id }})">Regenerate Thumbnail</button>
+    <button class="btn btn-secondary" onclick="regenerateThumbnailGoogle({{ book.id }})">Regenerate Thumbnail (G)</button>
     <a href="{{ url_for('book.edit_book', book_id=book.id) }}" class="btn btn-primary">Similar Books</a>
 
     
 
     <script>
-        function regenerateThumbnail(bookId) {
-            // TODO extract this, as we'll use this in other places too
-            fetch('/book/' + bookId + '/regenerate_thumbnail', {
+        function postAction(action, bookId) {
+            fetch('/book/' + bookId + '/' + action, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -64,8 +64,15 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error regenerating thumbnail');
-            });;
+                alert('Error initiating other action.');
+            });
+        }
+        function regenerateThumbnail(bookId) {
+            postAction('regenerate_thumbnail', bookId);
+        }
+
+        function regenerateThumbnailGoogle(bookId) {
+            postAction('regenerate_thumbnail_google', bookId);
         }
         </script>
 {% endblock %}

@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import requests
 from models import Book, db
 from PIL import Image
+import secrets
 
 import os
 
@@ -32,6 +33,10 @@ def download_cover_image(cover_image_url):
         # Extract filename from URL
         parsed_url = urlparse(cover_image_url)
         filename = Path(parsed_url.path).name
+        # google books doesn't return filename, so we need to generate one
+        if 'google' in cover_image_url:
+            # TODO check if filename already exists and generate a new one
+            filename = f"{secrets.token_hex(16)}.jpg"
 
         # Save the image to the 'covers' directory
         os.makedirs('./static/covers', exist_ok=True)

@@ -1,6 +1,7 @@
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from models import Book, db
 from metadata.openlibrary import get_book_data
+from metadata.google_books import search
 from book.thumbnails import make_tiny_cover_image, download_cover_image
 book_bp = Blueprint('book', __name__, url_prefix='/book')
 
@@ -64,8 +65,8 @@ def openlibrary_search(book_id):
     return jsonify(results)
 
 def download_thumbnail(book, results):
-    if 'cover_image' in results:
-        cover_image_url = results['cover_image']
+    if 'cover_image' in results[0]:
+        cover_image_url = results[0]['cover_image']
         if cover_image_url is not None:
             cover_image = download_cover_image(cover_image_url)
             cover_image_tiny = make_tiny_cover_image(cover_image)
@@ -83,4 +84,13 @@ def regenerate_thumbnail(book_id):
     download_thumbnail(book, results)
     flash(f"Thumbnail regenerated", 'success')
     return redirect(url_for('book.book_detail', book_id=book_id))
-    
+
+@book_bp.route('/<int:book_id>/regenerate_thumbnail_google', methods=['POST'])
+def regenerate_thumbnail_google(book_id):
+    book = Book.query.get_or_404(book_id)
+    # construct the search query
+    query = f"{book.title}"
+    results = search(query)
+    download_thumbnail(book, results)
+    flash(f"Thumbnail regenerated", 'success')
+    return redirect(url_for('book.book_detail', book_id=book_id))
