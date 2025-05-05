@@ -34,6 +34,50 @@ app.register_blueprint(authors_bp)
 def home():
     return redirect(url_for('books.list_books'))
 
+@app.context_processor
+def inject_menu():
+    menu_sections = [
+        {
+            'title': '',
+            'items':[
+                {'name': 'Books', 'url': '/', 'icon': '📚'},
+            ]
+        },
+        {
+            'title': 'Library',
+            'items':[
+                {'name': 'Authors', 'url': '/authors', 'icon': '👤'},
+                {'name': 'Genres', 'url': '/genres', 'icon': '🎭'},
+            ]
+        },
+        {
+            'title': 'Collections',
+            'items': [
+                {'name': 'Ebooks', 'url': '/ebooks', 'icon': '📲'},
+                {'name': 'Physical', 'url': '/physical', 'icon': '📙'},
+                {'name': 'Audiobooks', 'url': '/audiobooks', 'icon': '🔊'}
+            ]
+        },
+        {
+            'title': 'Status',
+            'items': [
+                {'name': 'Read', 'url': '/ebooks', 'icon': '✔'},
+                {'name': 'To Read', 'url': '/physical', 'icon': '🔜'},
+                {'name': 'Currently Reading', 'url': '/physical', 'icon': '⌛'},
+                {'name': 'Wishist', 'url': '/wishlist', 'icon': '💡'}
+            ]
+        },
+        {
+            'title': 'Tools',
+            'items': [
+                {'name': 'Import', 'url': '/import', 'icon': '📥'},
+                {'name': 'Export', 'url': '/export', 'icon': '📤'}
+            ]
+        }
+    ]
+    print(menu_sections)
+    return dict(menu_sections=menu_sections)
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
