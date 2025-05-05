@@ -3,14 +3,67 @@ from io import StringIO
 from flask import Blueprint, redirect, render_template, request, url_for, flash, session
 from metadata.openlibrary import get_book_data
 from models import Book, db
-
-
+from dataclasses import dataclass, field
 import_bp = Blueprint('import', __name__, url_prefix='/import')
+
+
+@dataclass
+class BookImport:
+    title: str
+    author_name: str
+    book_type: str = None
+    status: str = None
+    rating: float = None
+    genre: str = None
+    isbn: str = None
+    existing_book: bool = False
+    existing_book_id: int = None
 
 @import_bp.route('/')
 def search():
     # show a page with multiple import options
     return render_template('import.html')
+
+@import_bp.route('/import_results')
+def import_results():
+    import_books = session.get('import_books', [])  # Get from session, default to empty list
+    return render_template('import_results.html', import_books=import_books)
+
+@import_bp.route('/confirm_import', methods=['POST'])
+def confirm_import():
+    import_results = session.get('import_results', [])
+
+    for i, result in enumerate(import_results):
+        action = request.form.get('action')
+        if action == f'add_{i}':
+            # Create a new book
+            data = result['import_data']
+
+            new_book = Book(
+                title=data['title'],
+                # author_name=author_name,
+                # book_type = ,
+                # status = None,
+                # rating = None,
+
+                year_published=data['year']
+            )
+            db.session.add(new_book)
+
+        elif action == f'merge_{i}':
+            # Update existing book
+            existing_book_id = result['existing_book_id']
+            existing_book = Book.query.get(existing_book_id)
+            data = result['import_data']
+            # book type, status, rating, genre, etc. can be updated
+            existing_book.year_published = data['year']
+
+        db.session.commit()
+
+    # Clear import results from session
+    session.pop('import_results', None)
+
+    return redirect(url_for('books.search_books'))  # Redirect to book list
 
 @import_bp.route('/import_notes', methods=['GET', 'POST'])
 def import_notes():
@@ -19,8 +72,10 @@ def import_notes():
         # Process the notes data as needed
         lines = notes_data.splitlines()
         imported_count = 0
-
+        # list of BookImport objects
+        import_books = [] 
         for line in lines:
+            import_book = BookImport(title=None, author_name=None)
             # Try both formats: "title - author" and "title (author)"
             # markdown lines begin with a dash
             if line.startswith("- "):
@@ -47,19 +102,37 @@ def import_notes():
 
             title = title.strip()
             author_name = author_name.strip()
-            # Create a new book
-            book = Book(
-                title=title, 
-                author_name=author_name,
-                book_type=format,)
-            db.session.add(book)
+
+            # Check if the book already exists in the database
+            existing_book = Book.query.filter_by(title=title, author_name=author_name).first()
+            if existing_book:
+                print(f"Book already exists: {title} by {author_name}")
+                import_book.existing_book = True
+                import_book.existing_book_id = existing_book.id
+
+            import_book.author_name = author_name
+            import_book.title = title
+            import_book.book_type = format
+            import_books.append(import_book)
+            # book = Book(
+            #     title=title, 
+            #     author_name=author_name,
+            #     book_type=format,)
+            # db.session.add(book)
             imported_count += 1
         db.session.commit()
-        # Redirect to the books page after importing
-        flash(f"Successfully imported {imported_count} books!", 'success')  # Flash the message
-        return redirect(url_for('books.list_books'))
+        
+        # Redirect to the import page after importing
+        session['import_books'] = import_books
+        print('import_books', import_books)
 
-    return render_template('import_notes.html')
+        # flash(f"Successfully imported {imported_count} books!", 'success')  # Flash the message
+        #return redirect(url_for('books.list_books'))
+        #return render_template('import_results.html')
+        return redirect(url_for('import.import_results'))
+    
+
+    return render_template('import_results.html')
 
 @import_bp.route('/import_csv', methods=['POST'])
 def import_csv():
@@ -143,4 +216,5 @@ def import_csv():
                 flash("Error processing CSV file", 'danger')
                 return "Error processing CSV file", 500
 
+    # TODO remove, this page doesn't exist
     return render_template('goodreads_import_form.html')

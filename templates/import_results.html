@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Results</title>
+</head>
+<body>
+    <h1>Import Results</h1>
+
+    {% if import_books %}
+        <form action="{{ url_for('import.confirm_import') }}" method="POST">
+            <ul>
+                {% for book_result in import_books %}
+                    <li>
+                        foo
+                        {{ book_result.title }} by {{ book_result.author_name }}
+                        {% if book_result.existing_book %}
+                            <h2>Book to Merge</h2>
+                            <h3>Existing Book:</h3>
+                            TODO link existing books
+                            <p>ID: {{ book_result.existing_book_id }}</p>
+                            <h3>Import Data:</h3>
+                            <p>Title: {{ book_result.title }}</p>
+                            <p>Author: {{ book_result.author_name }}</p>
+                            {% if book_result.year %}
+                            <p>Year: {{ book_result.year }}</p>
+                            {% endif %}
+                            {% if book_result.isbn %}
+                            <p>ISBN: {{ book_result.isbn }}</p>
+                            {% endif %}
+                            {% if book_result.book_type %}
+                            <p>Book type: {{ book_result.book_type }}</p>
+                            {% endif %}
+                            {% if book_result.status %}
+                            <p>Status: {{ book_result.status }}</p>
+                            {% endif %}
+                            {% if book_result.rating %}
+                            <p>Rating: {{ book_result.rating }}</p>
+                            {% endif %}
+                            {% if book_result.genre %}
+                            <p>Genre: {{ book_result.genre }}</p>
+                            {% endif %}
+                            <input type="radio" id="html" name="action" value="merge" checked>
+                            <label for="html">Merge</label>
+                            <input type="radio" id="css" name="action" value="add">
+                            <label for="css">Add</label><br>
+                        {% else %}                            
+                            <h2>Book to Add</h2>
+                            <p>Title: {{ book_result.title }}</p>
+                            <p>Author: {{ book_result.author_name }}</p>
+                            {% if book_result.year %}
+                            <p>Year: {{ book_result.year }}</p>
+                            {% endif %}
+                            {% if book_result.isbn %}
+                            <p>ISBN: {{ book_result.isbn }}</p>
+                            {% endif %}
+                            {% if book_result.book_type %}
+                            <p>Book type: {{ book_result.book_type }}</p>
+                            {% endif %}
+                            {% if book_result.status %}
+                            <p>Status: {{ book_result.status }}</p>
+                            {% endif %}
+                            {% if book_result.rating %}
+                            <p>Rating: {{ book_result.rating }}</p>
+                            {% endif %}
+                            {% if book_result.genre %}
+                            <p>Genre: {{ book_result.genre }}</p>
+                            {% endif %}
+                            <button type="submit" name="action" value="add_{{ loop.index0 }}">Add Book</button>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            <button type="submit" name="action" value="confirm">Confirm Import</button>
+        </form>
+    {% else %}
+        <p>No import data found.</p>
+    {% endif %}
+
+</body>
+</html>
