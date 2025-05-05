@@ -81,7 +81,6 @@ def inject_menu():
             ]
         }
     ]
-    print(menu_sections)
     return dict(menu_sections=menu_sections)
 
 if __name__ == '__main__':
