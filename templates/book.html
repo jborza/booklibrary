@@ -39,14 +39,10 @@
     
     <a href="{{ url_for('book.edit_book', book_id=book.id) }}" class="btn btn-primary">Edit Book</a>
     <button class="btn btn-secondary" onclick="regenerateThumbnail({{ book.id }})">Regenerate Thumbnail</button>
+    <a href="{{ url_for('book.edit_book', book_id=book.id) }}" class="btn btn-primary">Similar Books</a>
+
     
 
-    <h2>Book Details (for debugging)</h2>
-    <ul>
-        {% for attribute in book.__dict__ %}
-            <li><strong>{{ attribute }}:</strong> {{ book.__dict__[attribute] }}</li>
-        {% endfor %}
-    </ul>
     <script>
         function regenerateThumbnail(bookId) {
             // TODO extract this, as we'll use this in other places too
