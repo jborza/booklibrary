@@ -1,6 +1,7 @@
 import csv
 from io import StringIO
 from flask import Blueprint, redirect, render_template, request, url_for, flash, session
+from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 from metadata.openlibrary import get_book_data
 from models import Book, db
 from dataclasses import dataclass, field
@@ -55,8 +56,7 @@ def confirm_import():
 
             if existing_book:
                 # Update existing book
-                update_book_fields(result, existing_book)
-                # TODO other columns? check goodreads import
+                update_book_fields(result, existing_book)                
         else:
             # Create a new book
             new_book = Book()
@@ -119,11 +119,13 @@ def import_notes():
             # there can be the book format in the line
             format = None
             if "pdf" in line:
-                format = "pdf"
+                format = EBOOK
             elif "epub" in line:
-                format = "epub"
+                format = EBOOK
             elif "physical" in line:
-                format = "physical"
+                format = PHYSICAL
+            elif "audiobook" in line:
+                format = AUDIOBOOK
 
             title = title.strip()
             author_name = author_name.strip()
@@ -135,28 +137,19 @@ def import_notes():
                 import_book.existing_book = True
                 import_book.existing_book_id = existing_book.id
 
-            import_book.author_name = author_name
             import_book.title = title
+            import_book.author_name = author_name
             import_book.book_type = format
-            import_books.append(import_book)
-            # book = Book(
-            #     title=title, 
-            #     author_name=author_name,
-            #     book_type=format,)
-            # db.session.add(book)
+            import_books.append(import_book)           
             imported_count += 1
         db.session.commit()
         
-        # Redirect to the import page after importing
+        # Redirect to the import details page
         session['import_books'] = import_books
-        print('import_books', import_books)
 
-        # flash(f"Successfully imported {imported_count} books!", 'success')  # Flash the message
-        #return redirect(url_for('books.list_books'))
-        #return render_template('import_results.html')
         return redirect(url_for('import.import_results'))
     
-
+    # TODO remove, this page doesn't exist
     return render_template('import_results.html')
 
 @import_bp.route('/import_csv', methods=['POST'])
@@ -175,8 +168,11 @@ def import_csv():
                 csv_data = StringIO(csv_text)
                 reader = csv.DictReader(csv_data)
                 imported_count = 0
+                import_books = [] 
 
                 for row in reader:
+                    import_book = BookImport(title=None, author_name=None)
+
                     title = row.get('Title')
                     author_name = row.get('Author')
                     isbn = row.get('ISBN')
@@ -202,40 +198,43 @@ def import_csv():
                         print(f"Skipping row due to invalid data: {row} - {e}")
                         continue
 
-                    # Create the book
-                    book = Book(
-                        title=title,
-                        author_name=author_name,
-                        year_published=year_published,
-                        isbn=isbn,
-                        rating=average_rating,
-                        page_count=number_of_pages,
-                        # Add other fields as needed
-                    )
-
-                    # Handle bookshelves - can be currently-reading, to-read, read
+                    # Handle bookshelves - can be currently-reading, to-read, read, wishlist
+                    status = None
                     if bookshelves:
                         bookshelves = [shelf.strip() for shelf in bookshelves.split(',')]
                         # maybe just use the shelf name as status
                         for shelf in bookshelves:
                             if shelf == 'currently-reading':
-                                book.status = 'currently-reading'
+                                status = 'currently-reading'
                             elif shelf == 'to-read':
-                                book.status = 'to-read'
+                                status = 'to-read'
                             elif shelf == 'read':
-                                book.status = 'read'
+                                status = 'read'
                             elif shelf == 'wishlist':
-                                book.status = 'wishlist'
+                                status = 'wishlist'
+
+                    existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
+                    if existing_book:
+                        print(f"Book already exists: {title} by {author_name}")
+                        import_book.existing_book = True
+                        import_book.existing_book_id = existing_book.id
                     
-                    db.session.add(book)
+                    import_book.title = title
+                    import_book.author_name = author_name
+                    import_book.book_type = EBOOK
+                    import_book.year_published = year_published
+                    import_book.isbn = isbn
+                    import_book.rating = average_rating
+                    import_book.page_count = number_of_pages
+                    import_book.status = status
+                    import_books.append(import_book)  
                     imported_count += 1
 
-                db.session.commit()
                 # Redirect to the books page after importing
-                # TODO figure out a way to show import status - the same in the import_notes
-                flash(f"Successfully imported {imported_count} books!", 'success')  # Flash the message
+                #flash(f"Successfully imported {imported_count} books!", 'success')  # Flash the message
                     
-                return redirect(url_for('books.list_books'))
+                session['import_books'] = import_books
+                return redirect(url_for('import.import_results'))
             except Exception as e:
                 print(f"Error processing CSV file: {e}")
                 flash("Error processing CSV file", 'danger')
