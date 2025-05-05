@@ -17,7 +17,7 @@
                 {% endif %}
                 </div>
                 <div class="col-md-9">
-                {{ display_book_details(result, result.author_name + ' ' + result.title) }}
+                {{ display_book_details(result, result.author_name + ' - ' + result.title) }}
                     <form method="POST" action="{{ url_for('books.add_book') }}">
                         {{ hidden_fields(result, [
                             'title', 'author_name', 'year_published', 'isbn', 'genre', 'language', 'synopsis', 'cover_image'
@@ -27,10 +27,8 @@
                 </div>
                 </div>
             </div>
-            {% endfor %}}
-
+            {% endfor %}
         </div>
-
     {% else %}
         <p>No results found.</p>
     {% endif %}

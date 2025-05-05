@@ -10,10 +10,8 @@
     <div class="container border rounded mb-3 p-3">
         <div class="row">
             <h4 class="mb-3">{{ book_result.title }} by {{ book_result.author_name }}</h4>
+            {% if book_result.existing_book %}
             <div class="col">
-
-                {% if book_result.existing_book %}
-
                 {% if book_result.existing_book_item.cover_image %}
                 <img class="thumbnail-foreground thumbnail-small" src="{{ url_for('static', filename=book_result.existing_book_item.cover_image) }}" alt="Book cover">
                 {% endif %}
@@ -29,8 +27,7 @@
                 <label for="css">Add</label><br>
             </div>
             {% else %}
-            {{ display_book_details(book_result.import_data, "Book to Add") }}
-            <button type="submit" name="action" value="add_{{ loop.index0 }}">Add Book</button>
+            {{ display_book_details(book_result, "Book to Add") }}
             {% endif %}
         </div>
     </div>
