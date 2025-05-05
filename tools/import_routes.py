@@ -1,6 +1,7 @@
 import csv
 from io import StringIO
 from flask import Blueprint, redirect, render_template, request, url_for, flash, session
+from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 from metadata.openlibrary import get_book_data
 from models import Book, db
@@ -205,13 +206,13 @@ def import_csv():
                         # maybe just use the shelf name as status
                         for shelf in bookshelves:
                             if shelf == 'currently-reading':
-                                status = 'currently-reading'
+                                status = CURRENTLY_READING
                             elif shelf == 'to-read':
-                                status = 'to-read'
+                                status = TO_READ
                             elif shelf == 'read':
-                                status = 'read'
+                                status = READ
                             elif shelf == 'wishlist':
-                                status = 'wishlist'
+                                status = WISHLIST
 
                     existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
                     if existing_book:
