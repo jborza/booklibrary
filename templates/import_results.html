@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Import{% endblock %}
 {% block content %}
+{% from "book_macros.html" import display_book_details %}
+
 <h1>Import Results</h1>
 {% if import_books %}
 <form action="{{ url_for('import.confirm_import') }}" method="POST">
@@ -12,53 +14,13 @@
 
                 {% if book_result.existing_book %}
 
-                <h6>Existing Book:</h6> 
                 {% if book_result.existing_book_item.cover_image %}
                 <img class="thumbnail-foreground thumbnail-small" src="{{ url_for('static', filename=book_result.existing_book_item.cover_image) }}" alt="Book cover">
                 {% endif %}
-                <p>Title: {{ book_result.existing_book_item.title }}</p>
-                <p>Author: {{ book_result.existing_book_item.author_name }}</p>
-                {% if book_result.existing_book_item.year %}
-                <p>Year: {{ book_result.existing_book_item.year }}</p>
-                {% endif %}
-                {% if book_result.existing_book_item.isbn %}
-                <p>ISBN: {{ book_result.existing_book_item.isbn }}</p>
-                {% endif %}
-                {% if book_result.existing_book_item.book_type %}
-                <p>Book type: {{ book_result.existing_book_item.book_type }}</p>
-                {% endif %}
-                {% if book_result.existing_book_item.status %}
-                <p>Status: {{ book_result.existing_book_item.status }}</p>
-                {% endif %}
-                {% if book_result.existing_book_item.rating %}
-                <p>Rating: {{ book_result.existing_book_item.rating }}</p>
-                {% endif %}
-                {% if book_result.existing_book_item.genre %}
-                <p>Genre: {{ book_result.existing_book_item.genre }}</p>
-                {% endif %}
+                {{ display_book_details(book_result, "Existing Book") }}
             </div>
             <div class="col">
-                <h6>Import Data:</h6>
-                <p>Title: {{ book_result.title }}</p>
-                <p>Author: {{ book_result.author_name }}</p>
-                {% if book_result.year %}
-                <p>Year: {{ book_result.year }}</p>
-                {% endif %}
-                {% if book_result.isbn %}
-                <p>ISBN: {{ book_result.isbn }}</p>
-                {% endif %}
-                {% if book_result.book_type %}
-                <p>Book type: {{ book_result.book_type }}</p>
-                {% endif %}
-                {% if book_result.status %}
-                <p>Status: {{ book_result.status }}</p>
-                {% endif %}
-                {% if book_result.rating %}
-                <p>Rating: {{ book_result.rating }}</p>
-                {% endif %}
-                {% if book_result.genre %}
-                <p>Genre: {{ book_result.genre }}</p>
-                {% endif %}
+                {{ display_book_details(book_result, "Import Data") }}
             </div>
             <div>
                 <input type="radio" id="html" name="action_{{ book_result.author_name}}{{book_result.title}}" value="merge" checked>
@@ -67,27 +29,7 @@
                 <label for="css">Add</label><br>
             </div>
             {% else %}
-            <h6>Book to Add</h6>
-            <p>Title: {{ book_result.title }}</p>
-            <p>Author: {{ book_result.author_name }}</p>
-            {% if book_result.year %}
-            <p>Year: {{ book_result.year }}</p>
-            {% endif %}
-            {% if book_result.isbn %}
-            <p>ISBN: {{ book_result.isbn }}</p>
-            {% endif %}
-            {% if book_result.book_type %}
-            <p>Book type: {{ book_result.book_type }}</p>
-            {% endif %}
-            {% if book_result.status %}
-            <p>Status: {{ book_result.status }}</p>
-            {% endif %}
-            {% if book_result.rating %}
-            <p>Rating: {{ book_result.rating }}</p>
-            {% endif %}
-            {% if book_result.genre %}
-            <p>Genre: {{ book_result.genre }}</p>
-            {% endif %}
+            {{ display_book_details(book_result.import_data, "Book to Add") }}
             <button type="submit" name="action" value="add_{{ loop.index0 }}">Add Book</button>
             {% endif %}
         </div>
