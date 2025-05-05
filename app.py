@@ -12,10 +12,10 @@ Flask application for a book management system.
 import secrets
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Book  
-from search.routes import search_bp
-from books.routes import books_bp  
-from book.routes import book_bp
-from tools.routes import import_bp
+from search.search_routes import search_bp
+from books.books_routes import books_bp  
+from book.book_routes import book_bp
+from tools.import_routes import import_bp
 
 app = Flask(__name__, static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
