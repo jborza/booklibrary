@@ -41,39 +41,54 @@ def import_results():
 
 @import_bp.route('/confirm_import', methods=['POST'])
 def confirm_import():
-    import_results = session.get('import_results', [])
+    import_books = session.get('import_books', [])
 
-    for i, result in enumerate(import_results):
-        action = request.form.get('action')
-        if action == f'add_{i}':
+    for i, result in enumerate(import_books):        
+        action_suffix = result['author_name'] + result['title']
+        action_id = f'action_{action_suffix}'
+        if action_id in request.form:
+            action = request.form[action_id]
+        # default action is to add a new book
+        if action == f'merge':
+            # Find existing book by id
+            existing_book = Book.query.get(result['existing_book_id'])
+
+            if existing_book:
+                # Update existing book
+                update_book_fields(result, existing_book)
+                # TODO other columns? check goodreads import
+        else:
             # Create a new book
-            data = result['import_data']
+            new_book = Book()
+            # add other fields if added
+            update_book_fields(result, new_book)
 
-            new_book = Book(
-                title=data['title'],
-                # author_name=author_name,
-                # book_type = ,
-                # status = None,
-                # rating = None,
-
-                year_published=data['year']
-            )
             db.session.add(new_book)
-
-        elif action == f'merge_{i}':
-            # Update existing book
-            existing_book_id = result['existing_book_id']
-            existing_book = Book.query.get(existing_book_id)
-            data = result['import_data']
-            # book type, status, rating, genre, etc. can be updated
-            existing_book.year_published = data['year']
 
         db.session.commit()
 
     # Clear import results from session
-    session.pop('import_results', None)
+    session.pop('import_books', None)
 
-    return redirect(url_for('books.search_books'))  # Redirect to book list
+    return redirect(url_for('books.list_books'))
+
+def update_book_fields(result, book):
+    book.title = result['title']
+    book.author_name = result['author_name']
+    if 'year' in result:
+        book.year_published = result['year']
+    if 'isbn' in result: 
+        book.isbn = result['isbn']
+    if 'book_type' in result:
+        book.book_type = result['book_type']
+    if 'status' in result:
+        book.status = result['status']
+    if 'rating' in result:
+        book.rating = result['rating']
+    if 'genre' in result:
+        book.genre = result['genre']
+    if 'language' in result:
+        book.language = result['language'] 
 
 @import_bp.route('/import_notes', methods=['GET', 'POST'])
 def import_notes():

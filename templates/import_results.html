@@ -62,9 +62,9 @@
                 {% endif %}
             </div>
             <div>
-                <input type="radio" id="html" name="{{ book_result.existing_book_id}}_action" value="merge" checked>
+                <input type="radio" id="html" name="action_{{ book_result.author_name}}{{book_result.title}}" value="merge" checked>
                 <label for="html">Merge</label>
-                <input type="radio" id="css" name="{{ book_result.existing_book_id}}_action" value="add">
+                <input type="radio" id="css" name="action_{{ book_result.author_name}}{{book_result.title}}" value="add">
                 <label for="css">Add</label><br>
             </div>
             {% else %}
