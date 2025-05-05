@@ -5,34 +5,32 @@
 {% from "search_macros.html" import hidden_fields %}
 
     <h1>Search Books</h1>
-    <p>This is the search page content.</p>
     <p>You searched for: <strong>{{ query }}</strong></p>
     {% if results %}
-        {% if results|length > 0 %}
-        {% set result = results %}
-        <div class="card">
-            <div class="row no-gutters">
-            <div class="col-md-3">
-            {% if result.cover_image %}
-                <img src="{{ result.cover_image }}" class="card-img-top cover-image" alt="Cover Image" >
-            {% endif %}
+        {{ results|length }} results found.
+            {% for result in results %}
+            <div class="card">
+                <div class="row no-gutters">
+                <div class="col-md-3">
+                {% if result.cover_image %}
+                    <img src="{{ result.cover_image }}" class="card-img-top cover-image thumbnail-small" alt="Cover Image" >
+                {% endif %}
+                </div>
+                <div class="col-md-9">
+                {{ display_book_details(result, result.author_name + ' ' + result.title) }}
+                    <form method="POST" action="{{ url_for('books.add_book') }}">
+                        {{ hidden_fields(result, [
+                            'title', 'author_name', 'year_published', 'isbn', 'genre', 'language', 'synopsis', 'cover_image'
+                        ]) }}
+                        <button type="submit" class="btn btn-primary">Add to collection</button>
+                    </form>
+                </div>
+                </div>
             </div>
-            <div class="col-md-9">
-            {{ display_book_details(result, "Found Book") }}
-                <form method="POST" action="{{ url_for('books.add_book') }}">
-                    {{ hidden_fields(result, [
-                        'title', 'author_name', 'year_published', 'isbn', 'genre', 'language', 'synopsis', 'cover_image'
-                    ]) }}
-                    <button type="submit" class="btn btn-primary">Add to collection</button>
-                </form>
-                <hr />
-            </div>
-            </div>
+            {% endfor %}}
+
         </div>
-        </div>
-        {% else %}
-            <p>No results found.</p>
-        {% endif %}
+
     {% else %}
         <p>No results found.</p>
     {% endif %}
