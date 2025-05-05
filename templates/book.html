@@ -49,6 +49,7 @@
     </ul>
     <script>
         function regenerateThumbnail(bookId) {
+            // TODO extract this, as we'll use this in other places too
             fetch('/book/' + bookId + '/regenerate_thumbnail', {
                 method: 'POST',
                 headers: {
@@ -57,10 +58,18 @@
                 body: JSON.stringify({ book_id: bookId })
             })
             .then(response => {
-                if (!response.ok) {
+                if(response.ok) {
+                    window.location.reload();
+                }
+                else {
+                    console.error('Error:', response.status);
                     alert('Error initiating other action.');
                 }
-            });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error regenerating thumbnail');
+            });;
         }
         </script>
 {% endblock %}

@@ -59,6 +59,11 @@ def openlibrary_search(book_id):
         flash("No results found", 'error')
         return redirect(url_for('book.book_detail', book_id=book.id))
     # download the covers
+    download_thumbnail(book, results)
+    flash(f"Search completed", 'success')
+    return jsonify(results)
+
+def download_thumbnail(book, results):
     if 'cover_image' in results:
         cover_image_url = results['cover_image']
         if cover_image_url is not None:
@@ -68,4 +73,14 @@ def openlibrary_search(book_id):
             book.cover_image = cover_image
             book.cover_image_tiny = cover_image_tiny
             db.session.commit()
-    return jsonify(results)
+
+@book_bp.route('/<int:book_id>/regenerate_thumbnail', methods=['POST'])
+def regenerate_thumbnail(book_id):
+    book = Book.query.get_or_404(book_id)
+    # construct the search query
+    query = f"{book.title}"
+    results = get_book_data(query)
+    download_thumbnail(book, results)
+    flash(f"Thumbnail regenerated", 'success')
+    return redirect(url_for('book.book_detail', book_id=book_id))
+    
