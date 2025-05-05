@@ -23,3 +23,9 @@
   {% endif %}
   </ul>
 {% endmacro %}
+
+{% macro hidden_fields(obj, fields) %}
+    {% for field in fields %}
+        <input type="hidden" name="{{ field }}" value="{{ obj[field] }}">
+    {% endfor %}
+{% endmacro %}
