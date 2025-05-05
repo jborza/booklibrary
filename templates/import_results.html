@@ -16,7 +16,6 @@
                 {% if book_result.existing_book_item.cover_image %}
                 <img class="thumbnail-foreground thumbnail-small" src="{{ url_for('static', filename=book_result.existing_book_item.cover_image) }}" alt="Book cover">
                 {% endif %}
-                <p>ID: {{ book_result.existing_book_item.id }}</p>
                 <p>Title: {{ book_result.existing_book_item.title }}</p>
                 <p>Author: {{ book_result.existing_book_item.author_name }}</p>
                 {% if book_result.existing_book_item.year %}
