@@ -53,18 +53,18 @@ def inject_menu():
         {
             'title': 'Collections',
             'items': [
-                {'name': 'Ebooks', 'url': '/ebooks', 'icon': '📲'},
-                {'name': 'Physical', 'url': '/physical', 'icon': '📙'},
-                {'name': 'Audiobooks', 'url': '/audiobooks', 'icon': '🔊'}
+                {'name': 'Ebooks', 'url': '/books?type=ebook', 'icon': '📲'},
+                {'name': 'Physical', 'url': '/books?type=physical', 'icon': '📙'},
+                {'name': 'Audiobooks', 'url': '/books?type=audiobook', 'icon': '🔊'}
             ]
         },
         {
             'title': 'Status',
             'items': [
-                {'name': 'Read', 'url': '/ebooks', 'icon': '✔'},
-                {'name': 'To Read', 'url': '/physical', 'icon': '🔜'},
-                {'name': 'Currently Reading', 'url': '/physical', 'icon': '⌛'},
-                {'name': 'Wishist', 'url': '/wishlist', 'icon': '💡'}
+                {'name': 'Read', 'url': '/books?status=read', 'icon': '✔'},
+                {'name': 'To Read', 'url': '/books?status=to-read', 'icon': '🔜'},
+                {'name': 'Currently Reading', 'url': '/books?status=currently-reading', 'icon': '⌛'},
+                {'name': 'Wishist', 'url': '/books?status=wishlist', 'icon': '💡'}
             ]
         },
         {

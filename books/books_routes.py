@@ -3,6 +3,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 from flask import Blueprint, app, redirect, render_template, request
 from sqlalchemy import or_
+from book.book_types import EBOOK
 from models import Book, db
 import requests
 from PIL import Image
@@ -12,8 +13,18 @@ books_bp = Blueprint('books', __name__, url_prefix='/books')
 
 @books_bp.route('/')
 def list_books():
-    books = Book.query.all()
-    return render_template('books.html', books=books)
+    # parameters
+    book_type = request.args.get('type')
+    book_status = request.args.get('status')
+    all_books = Book.query 
+    filtered_books = all_books
+
+    if book_type:
+        filtered_books = filtered_books.filter_by(book_type=book_type)
+    if book_status:
+        filtered_books = filtered_books.filter_by(status=book_status)
+
+    return render_template('books.html', books=filtered_books.all())
 
 @books_bp.route('/search')
 def search_books():
