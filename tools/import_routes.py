@@ -27,7 +27,8 @@ def import_notes():
                 line = line[2:]
             # Check if the line contains " - " or " (" and ")" to separate title and author
             if " - " in line:
-                title, author_name = line.split(" - ")
+                split = line.split(" - ")
+                title, author_name = split[0], split[1]
             elif " (" in line and ")" in line:
                 title = line[:line.index(" (")]
                 author_name = line[line.index(" (") + 2:line.index(")")]
