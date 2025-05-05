@@ -1,0 +1,25 @@
+{% macro display_book_details(book_item, title) %}
+  <h6>{{ title }}:</h6>
+  <ul class="list-unstyled mt-3 mb-4">
+  <li>Title: {{ book_item.title }}</li>
+  <li>Author: {{ book_item.author_name }}</li>
+  {% if book_item.year %}
+    <li>Year: {{ book_item.year }}</li>
+  {% endif %}
+  {% if book_item.isbn %}
+    <li>ISBN: {{ book_item.isbn }}</li>
+  {% endif %}
+  {% if book_item.book_type %}
+    <li>Book type: {{ book_item.book_type }}</li>
+  {% endif %}
+  {% if book_item.status %}
+    <li>Status: {{ book_item.status }}</li>
+  {% endif %}
+  {% if book_item.rating %}
+    <li>Rating: {{ book_item.rating }}</li>
+  {% endif %}
+  {% if book_item.genre %}
+    <li>Genre: {{ book_item.genre }}</li>
+  {% endif %}
+  </ul>
+{% endmacro %}
