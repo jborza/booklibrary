@@ -1,4 +1,6 @@
+from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect
 db = SQLAlchemy()
 
 
@@ -23,3 +25,21 @@ class Book(db.Model):
     cover_thumbnail = db.Column(db.Text)  # URL or path to the thumbnail image
     def __repr__(self):
         return f'<Book {self.title}>'
+    
+    def as_dict(self):
+        book_dict = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+
+        # Handle date serialization (if necessary)
+        for key, value in book_dict.items():
+            if isinstance(value, datetime):
+                book_dict[key] = value.isoformat()  # Convert datetime to ISO string
+        return book_dict
+        # todo isn't there a better way to do this?
+        # return {
+        #     'id': self.id,
+        #     'title': self.title,
+        #     'author_name': self.author_name,
+        #     'book_type': self.book_type,
+        #     'status': self.status,
+        #     'date_added': self.date_added.isoformat() if self.date_added else None  # Handle datetime
+        # }
