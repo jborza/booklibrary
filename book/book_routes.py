@@ -74,6 +74,8 @@ def download_thumbnail(book, results):
             book.cover_image = cover_image
             book.cover_image_tiny = cover_image_tiny
             db.session.commit()
+            return True
+    return False
 
 @book_bp.route('/<int:book_id>/regenerate_thumbnail', methods=['POST'])
 def regenerate_thumbnail(book_id):
@@ -81,7 +83,10 @@ def regenerate_thumbnail(book_id):
     # construct the search query
     query = f"{book.title}"
     results = get_book_data(query)
-    download_thumbnail(book, results)
+    result = download_thumbnail(book, results)
+    if not result:
+        flash("No thumbnail found", 'error')
+        return redirect(url_for('book.book_detail', book_id=book.id))
     flash(f"Thumbnail regenerated", 'success')
     return redirect(url_for('book.book_detail', book_id=book_id))
 
@@ -89,8 +94,11 @@ def regenerate_thumbnail(book_id):
 def regenerate_thumbnail_google(book_id):
     book = Book.query.get_or_404(book_id)
     # construct the search query
-    query = f"{book.title}"
+    query = f"{book.author_name} {book.title}"
     results = search(query)
-    download_thumbnail(book, results)
+    result = download_thumbnail(book, results)
+    if not result:
+        flash("No thumbnail found", 'error')
+        return redirect(url_for('book.book_detail', book_id=book.id))
     flash(f"Thumbnail regenerated", 'success')
     return redirect(url_for('book.book_detail', book_id=book_id))
