@@ -85,10 +85,8 @@ def regenerate_thumbnail(book_id):
     results = get_book_data(query)
     result = download_thumbnail(book, results)
     if not result:
-        flash("No thumbnail found", 'error')
-        return redirect(url_for('book.book_detail', book_id=book.id))
-    flash(f"Thumbnail regenerated", 'success')
-    return redirect(url_for('book.book_detail', book_id=book_id))
+        return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
+    return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200
 
 @book_bp.route('/<int:book_id>/regenerate_thumbnail_google', methods=['POST'])
 def regenerate_thumbnail_google(book_id):
@@ -98,7 +96,5 @@ def regenerate_thumbnail_google(book_id):
     results = search(query)
     result = download_thumbnail(book, results)
     if not result:
-        flash("No thumbnail found", 'error')
-        return redirect(url_for('book.book_detail', book_id=book.id))
-    flash(f"Thumbnail regenerated", 'success')
-    return redirect(url_for('book.book_detail', book_id=book_id))
+        return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
+    return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200

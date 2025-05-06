@@ -45,7 +45,7 @@
     
 
     <script>
-        function postAction(action, bookId) {
+        function postActionJson(action, bookId, successCallback) {
             fetch('/book/' + bookId + '/' + action, {
                 method: 'POST',
                 headers: {
@@ -54,25 +54,47 @@
                 body: JSON.stringify({ book_id: bookId })
             })
             .then(response => {
-                if(response.ok) {
-                    window.location.reload();
+                if (!response.ok) {
+                    // Handle HTTP errors (e.g., 404, 500)
+                    console.error('HTTP error! Status:', response.status);
+                    return response.json().then(data => { //Parse the error message
+                        throw new Error(data.message || 'Unknown error'); //Throw the error for catch block
+                    });
                 }
-                else {
-                    console.error('Error:', response.status);
-                    alert('Error initiating other action.');
+                return response.json(); // Parse JSON response
+            })
+            .then(data => {
+                console.log(data); // Log the response data for debugging
+                if (data.status === 'success') {
+                    // Handle success response - e.g., show a success message?   
+                    console.log(data.message);                 
+                    successCallback(data); // Call the success callback with the response data
+                } else {
+                    // Handle failure response
+                    alert('Action failed: ' + data.message);
                 }
             })
             .catch(error => {
+                // Handle errors (e.g., network errors, JSON parsing errors, server-side errors)
                 console.error('Error:', error);
-                alert('Error initiating other action.');
+                alert('Error: ' + error.message); // Display the error message
             });
         }
+
         function regenerateThumbnail(bookId) {
-            postAction('regenerate_thumbnail', bookId);
+            postActionJson('regenerate_thumbnail', bookId, function(response) {
+                if (response.success) {
+                    window.location.reload(); // Reload the page to reflect changes
+                } 
+            });
         }
 
         function regenerateThumbnailGoogle(bookId) {
-            postAction('regenerate_thumbnail_google', bookId);
+            postActionJson('regenerate_thumbnail_google', bookId, function(response) {
+                if (response.success) {
+                    window.location.reload(); // Reload the page to reflect changes
+                } 
+            });
         }
         </script>
 {% endblock %}
