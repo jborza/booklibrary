@@ -2,17 +2,40 @@
 {% block title %}Books{% endblock %}
 {% block content %}
     <h4>Books</h4>
-    <ul>
-        {% for book in books %}
-        <div class="book-item">
-            <li>
-            {% if book.cover_image_tiny %}
-                <img src="{{ url_for('static', filename=book.cover_image_tiny) }}" alt="Cover Image" class="cover-image-tiny" >
-            {% endif %}
-                <a href="{{ url_for('book.book_detail', book_id=book.id) }}">{{ book.title }}</a> by {{ book.author_name }}
-            </li>
-        </div>
-        {% endfor %}
-    </ul>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Cover</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Rating</th>
+                <th>Shelves</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td>{{ loop.index }}</td>  <!-- Book Number -->
+                <td>
+                {% if book.cover_image_tiny %}
+                    <img src="{{ url_for('static', filename=book.cover_image_tiny) }}" alt="{{ book.title }} Cover" class="book-cover">
+                {% endif %}
+                </td>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author_name }}</td>
+                <td>{{ book.rating }}</td>
+                <td>{{ book.status }}</td>
+                <td>
+                    <a href="{{ url_for('book.edit_book', book_id=book.id) }}">Edit</a>
+                    <a href="{{ url_for('book.book_detail', book_id=book.id) }}">View</a>
+                    <!-- Add more actions as needed -->
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 {% endblock %}
