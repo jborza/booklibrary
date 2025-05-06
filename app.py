@@ -11,6 +11,7 @@ Flask application for a book management system.
 """
 import secrets
 from flask import Flask, render_template, request, redirect, url_for
+from flask_cors import CORS
 from models import db, Book  
 from search.search_routes import search_bp
 from books.books_routes import books_bp  
@@ -19,6 +20,7 @@ from tools.import_routes import import_bp
 from authors.authors_routes import authors_bp
 
 app = Flask(__name__, static_folder='static')
+CORS(app)  # Enable CORS for all routes
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_hex(16) # Generate a random secret key

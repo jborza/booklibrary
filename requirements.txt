@@ -4,3 +4,4 @@ requests
 requests-cache
 pillow
 python-dotenv
+flask-cors
