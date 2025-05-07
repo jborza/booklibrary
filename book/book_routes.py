@@ -10,6 +10,11 @@ def book_detail(book_id):
     book = Book.query.get_or_404(book_id)
     return render_template('book.html', book=book)
 
+@book_bp.route('/api/<int:book_id>')
+def book_detail_api(book_id):
+    book = Book.query.get_or_404(book_id)
+    return jsonify(book.as_dict())
+
 @book_bp.route('/<int:book_id>/edit', methods=['GET', 'POST'])
 def edit_book(book_id):
     book = Book.query.get_or_404(book_id)

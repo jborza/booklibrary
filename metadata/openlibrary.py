@@ -12,12 +12,12 @@ session = requests_cache.CachedSession(cache_name, expire_after=expire_after)
 
 def fetch_book_data(title, limit):
     url = f"https://openlibrary.org/search.json?title={title}&fields=*&limit={limit}"
-    
+
     try:
         response = session.get(url)
         response.raise_for_status()  # Raise an error for bad responses
         data = response.json()
-        
+
         if data['numFound'] == 0:
             return {"error": "No results found"}
 
@@ -25,7 +25,24 @@ def fetch_book_data(title, limit):
         book_data = data['docs']
         return book_data
     except requests.RequestException as e:
-            return {"error": str(e)}
+        return {"error": str(e)}
+
+def fetch_book_data_api(title, limit):
+    url = f"https://openlibrary.org/search.json?title={title}&fields=*&limit={limit}"
+
+    try:
+        response = session.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+        data = response.json()
+
+        if data['numFound'] == 0:
+            return []
+
+        # n entries - data['docs]
+        book_data = data['docs']
+        return book_data
+    except requests.RequestException as e:
+        return []
 
 def get_book_data(title, count=1):
     """
@@ -37,8 +54,27 @@ def get_book_data(title, count=1):
     Returns:
         dict: A dictionary containing book data or an error message.
     """
-    
+
     book_data = fetch_book_data(title, count)
+    if "error" in book_data:
+        return book_data
+
+    # Extract relevant fields
+    result = [fill_book_data(b) for b in book_data]
+    return result
+
+def get_book_data_api(title, count=1):
+    """
+    Fetch book data from Open Library API based on the title.
+    
+    Args:
+        title (str): The title of the book to search for.
+        
+    Returns:
+        dict: A dictionary containing book data or an error message.
+    """
+
+    book_data = fetch_book_data_api(title, count)
     if "error" in book_data:
         return book_data
 

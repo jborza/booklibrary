@@ -112,6 +112,7 @@ def add_book():
         genre = genre,
         language=language,
         isbn=isbn,
+        synopsis=synopsis,
         cover_image = cover_image,
         cover_image_tiny = cover_image_tiny,
     )
@@ -120,3 +121,44 @@ def add_book():
     db.session.commit()
     return redirect('/books/')
 
+@books_bp.route('/add_book_api', methods=['POST'])
+def add_book_api():
+    # Parse the JSON payload
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+
+    # Extract fields from the JSON payload
+    title = data.get('title')
+    author_name = data.get('author_name')
+    year_published = data.get('year_published')
+    isbn = data.get('isbn')
+    genre = data.get('genre')
+    language = data.get('language')
+    synopsis = data.get('synopsis')
+    cover_image_url = data.get('cover_image')
+
+    # Download the cover image and save it to a local directory
+    cover_image = download_cover_image(cover_image_url)
+    cover_image_tiny = make_tiny_cover_image(cover_image)
+
+    # Create a new book
+    book = Book(
+        title=title,
+        author_name=author_name,
+        year_published=year_published,
+        book_type = None,
+        status = None,
+        rating = None,
+        genre = genre,
+        language=language,
+        isbn=isbn,
+        synopsis=synopsis,
+        cover_image = cover_image,
+        cover_image_tiny = cover_image_tiny,
+    )
+    db.session.add(book)
+
+    db.session.commit()
+    return jsonify(book.as_dict()), 201
