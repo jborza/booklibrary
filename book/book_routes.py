@@ -54,6 +54,45 @@ def edit_book(book_id):
         return redirect(url_for('book.book_detail', book_id=book.id))
     return render_template('edit_book.html', book=book)
 
+# TODO rename API method urls
+@book_bp.route('/<int:book_id>/edit_api', methods=['POST'])
+def edit_book_api(book_id):
+    book = Book.query.get_or_404(book_id)
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request, no JSON body found"}), 400
+    book.title = data['title']
+    book.author_name = data['author_name']
+    if data['year'] is not None:
+        book.year_published = data['year']
+    if data['isbn'] is not None:
+        book.isbn = data['isbn']
+    if data['rating'] is not None:
+        book.rating = data['rating']
+    if data['book_type'] is not None:
+        book.book_type = data['book_type']
+    if data['status'] is not None:
+        book.status = data['status']
+    if data['genre'] is not None:
+        book.genre = data['genre']
+    if data['language'] is not None:
+        book.language = data['language']
+    if data['synopsis'] is not None:
+        book.synopsis = data['synopsis']
+    if data['review'] is not None:
+        book.review = data['review']
+    if data['page_count'] is not None:
+        book.page_count = data['page_count']
+    if data['series'] is not None:
+        book.series = data['series']
+    if data['tags'] is not None:
+        book.tags = data['tags']
+    #if data['publisher'] is not None:
+    #    book.publisher = data['publisher']
+    # TODO handle cover image URL / upload?
+    # book.cover_image = request.form['cover_image']
+    db.session.commit()
+    return jsonify({'status': 'success', 'message': 'Book saved successfully'}), 200
 
 @book_bp.route('/<int:book_id>/openlibrary_search')
 def openlibrary_search(book_id):
@@ -103,3 +142,16 @@ def regenerate_thumbnail_google(book_id):
     if not result:
         return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
     return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200
+
+# an API version
+@book_bp.route('/<int:book_id>/match', methods=['GET'])
+def match_book(book_id):
+    book = Book.query.get_or_404(book_id)
+    # construct the search query - search on google books now, but can on openlibrary too
+    query = f"{book.author_name} {book.title}"
+    results = search(query, count=5)
+    if len(results) == 0:
+        flash("No results found", 'error')
+        return redirect(url_for('book.book_detail', book_id=book.id))
+    flash(f"Search completed", 'success')
+    return jsonify(results)
