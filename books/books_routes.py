@@ -68,16 +68,17 @@ def search_books():
 @books_bp.route('/search_api')
 def search_books_api():
     query = request.args.get('search_query')
-    if query:        
+    if query:
         books = Book.query.filter(Book.title.ilike(f'%{query}%')).all()
-        # Search books by title, author, ISBN, or year
+        # Search books by title, author, ISBN, or year or genre
         books = Book.query.filter(
             or_(
                 # Use ilike for case-insensitive search
                 Book.title.ilike(f'%{query}%'),
                 Book.author_name.ilike(f'%{query}%'),
                 Book.isbn.ilike(f'%{query}%'),
-                Book.year_published.ilike(f'%{query}%')  
+                Book.year_published.ilike(f'%{query}%'),
+                Book.genre.ilike(f'%{query}%')  
             )
         ).all()
     else:
