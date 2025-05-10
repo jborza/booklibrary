@@ -54,6 +54,48 @@ def edit_book(book_id):
         return redirect(url_for('book.book_detail', book_id=book.id))
     return render_template('edit_book.html', book=book)
 
+def fill_book_data(book: Book, data):
+    # json to Book
+    fields = {
+        'title': 'title',
+        'author_name': 'author_name',
+        'year': 'year_published',
+        'isbn': 'isbn',
+        'rating': 'rating',
+        'book_type': 'book_type',
+        'status': 'status',
+        'genre': 'genre',
+        'language': 'language',
+        'synopsis': 'synopsis',
+        'review': 'review',
+        'pages': 'page_count',
+        'series': 'series',
+        'tags': 'tags',
+        # 'publisher': 'publisher',
+        # 'cover_image': 'cover_image',
+    }
+
+    for key, attr in fields.items():
+        if key in data and data[key] is not None:
+            setattr(book, attr, data[key])
+
+    return book
+
+# TODO rename API method urls
+@book_bp.route('/add_book_api', methods=['POST'])
+def add_book_api():
+    book = Book()
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request, no JSON body found"}), 400
+    fill_book_data(book, data)
+    db.session.add(book)
+    db.session.commit()
+    # add the cover image
+    if 'cover_image' in data and data['cover_image'] is not None:
+        download_thumbnail(book, data)
+    return jsonify({'status': 'success', 'message': 'Book saved successfully', 'id':book.id}), 200
+
 # TODO rename API method urls
 @book_bp.route('/<int:book_id>/edit_api', methods=['POST'])
 def edit_book_api(book_id):
@@ -61,36 +103,10 @@ def edit_book_api(book_id):
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid request, no JSON body found"}), 400
-    book.title = data['title']
-    book.author_name = data['author_name']
-    if data['year'] is not None:
-        book.year_published = data['year']
-    if data['isbn'] is not None:
-        book.isbn = data['isbn']
-    if data['rating'] is not None:
-        book.rating = data['rating']
-    if data['book_type'] is not None:
-        book.book_type = data['book_type']
-    if data['status'] is not None:
-        book.status = data['status']
-    if data['genre'] is not None:
-        book.genre = data['genre']
-    if data['language'] is not None:
-        book.language = data['language']
-    if data['synopsis'] is not None:
-        book.synopsis = data['synopsis']
-    if data['review'] is not None:
-        book.review = data['review']
-    if data['page_count'] is not None:
-        book.page_count = data['page_count']
-    if data['series'] is not None:
-        book.series = data['series']
-    if data['tags'] is not None:
-        book.tags = data['tags']
-    #if data['publisher'] is not None:
-    #    book.publisher = data['publisher']
-    # TODO handle cover image URL / upload?
-    # book.cover_image = request.form['cover_image']
+    fill_book_data(book, data)
+    # handle cover image URL
+    if 'cover_image' in data and data['cover_image'] is not None:
+        download_thumbnail(book, data)
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'Book saved successfully'}), 200
 
@@ -104,22 +120,22 @@ def openlibrary_search(book_id):
         flash("No results found", 'error')
         return redirect(url_for('book.book_detail', book_id=book.id))
     # download the covers
-    download_thumbnail(book, results)
+    download_thumbnail(book, results[0])
     flash(f"Search completed", 'success')
     return jsonify(results)
 
 def download_thumbnail(book, results):
-    if 'cover_image' in results[0]:
-        cover_image_url = results[0]['cover_image']
-        if cover_image_url is not None:
-            cover_image = download_cover_image(cover_image_url)
-            cover_image_tiny = make_tiny_cover_image(cover_image)
-            # update the book object with the new cover image
-            book.cover_image = cover_image
-            book.cover_image_tiny = cover_image_tiny
-            db.session.commit()
-            return True
-    return False
+    if 'cover_image' not in results:
+        return False
+    cover_image_url = results['cover_image']
+    if cover_image_url is not None:
+        cover_image = download_cover_image(cover_image_url)
+        cover_image_tiny = make_tiny_cover_image(cover_image)
+        # update the book object with the new cover image
+        book.cover_image = cover_image
+        book.cover_image_tiny = cover_image_tiny
+        db.session.commit()
+        return True
 
 @book_bp.route('/<int:book_id>/regenerate_thumbnail', methods=['POST'])
 def regenerate_thumbnail(book_id):
@@ -127,7 +143,7 @@ def regenerate_thumbnail(book_id):
     # construct the search query
     query = f"{book.title}"
     results = get_book_data(query)
-    result = download_thumbnail(book, results)
+    result = download_thumbnail(book, results[0])
     if not result:
         return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
     return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200
@@ -138,7 +154,7 @@ def regenerate_thumbnail_google(book_id):
     # construct the search query
     query = f"{book.author_name} {book.title}"
     results = search(query)
-    result = download_thumbnail(book, results)
+    result = download_thumbnail(book, results[0])
     if not result:
         return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
     return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200
