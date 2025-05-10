@@ -26,4 +26,7 @@ def search(query, count=1):
             "isbn": volume.get("industryIdentifiers", [{}])[0].get("identifier"),
             "genre": ','.join(volume.get("categories")) if volume.get("categories") else None,
         })
+        # if genres are like Biography & Autobiography, replace & with ,
+        if results[-1]['genre']:
+            results[-1]['genre'] = results[-1]['genre'].replace('&', ',').split(',')
     return results
