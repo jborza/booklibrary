@@ -329,3 +329,31 @@ def import_csv_api():
         except Exception as e:
             print(f"Error processing CSV file: {e}")
             return jsonify({'status': 'error', 'message': 'Error processing CSV file'}), 500
+
+@import_bp.route('/confirm_import_api', methods=['POST'])
+def confirm_import_api():
+    if request.method != 'POST':
+        return jsonify({'status': 'error', 'message': 'Invalid request method'}), 405
+    import_books = request.json
+
+    for i, result in enumerate(import_books):
+        action = 'add'  # default action is to add a new book
+        if 'action' in result:
+            action = result['action']
+        if action == f'merge':
+            # Find existing book by id
+            existing_book = Book.query.get(result['existing_book_id'])
+
+            if existing_book:
+                # Update existing book
+                update_book_fields(result, existing_book)
+        else:
+            # Create a new book
+            new_book = Book()
+            # add other fields if added
+            update_book_fields(result, new_book)
+            db.session.add(new_book)
+
+        db.session.commit()
+
+    return jsonify({'status': 'success', 'message': 'Books imported successfully'}), 200
