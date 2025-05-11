@@ -143,8 +143,7 @@ def import_notes():
             import_book.book_type = format
             import_books.append(import_book)           
             imported_count += 1
-        db.session.commit()
-        
+
         # Redirect to the import details page
         session['import_books'] = import_books
 
@@ -324,11 +323,77 @@ def import_csv_api():
                 import_books.append(import_book)
                 imported_count += 1
 
-            # session['import_books'] = import_books
             return jsonify({'status': 'success', 'import_books': import_books}), 200
         except Exception as e:
             print(f"Error processing CSV file: {e}")
             return jsonify({'status': 'error', 'message': 'Error processing CSV file'}), 500
+
+@import_bp.route('/import_notes_api', methods=['POST'])
+def import_notes_api():
+    if request.method != 'POST':
+        return jsonify({'status': 'error', 'message': 'Invalid request method'}), 405
+    # data in request.form - notes, importFormat
+    notes_data = request.form['notes']
+    # can be either authorTitle or titleAuthor
+    # TODO use this!!!
+    importFormat = request.form['importFormat']
+    AUTHORTITLE = 'authorTitle'
+    TITLEAUTHOR = 'titleAuthor'
+    # Process the notes data as needed
+    lines = notes_data.splitlines()
+    imported_count = 0
+    # list of BookImport objects
+    import_books = []
+    for line in lines:
+        import_book = BookImport(title=None, author_name=None)
+        # Try both formats: "title - author" and "title (author)"
+        # markdown lines begin with a dash
+        if line.startswith("- "):
+            line = line[2:]
+        # Check if the line contains " - " or " (" and ")" to separate title and author
+        if " - " in line:
+            split = line.split(" - ")
+            if importFormat == AUTHORTITLE:
+                title, author_name = split[1], split[0]
+            else:
+                title, author_name = split[0], split[1]
+        elif " (" in line and ")" in line:
+            title = line[:line.index(" (")]
+            author_name = line[line.index(" (") + 2:line.index(")")]
+        else:
+            # Skip lines that don't match either format
+            print(f"Skipping invalid line: {line}")
+            continue
+        # there can be the book format in the line
+        format = None
+        if "pdf" in line:
+            format = EBOOK
+        elif "epub" in line:
+            format = EBOOK
+        elif "physical" in line:
+            format = PHYSICAL
+        elif "audiobook" in line:
+            format = AUDIOBOOK
+
+        title = title.strip()
+        author_name = author_name.strip()
+
+        # Check if the book already exists in the database
+        existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
+        if existing_book:
+            print(f"Book already exists: {title} by {author_name}")
+            import_book.existing_book = True
+            import_book.existing_book_id = existing_book.id
+
+        import_book.title = title
+        import_book.author_name = author_name
+        import_book.book_type = format
+        import_books.append(import_book)
+        imported_count += 1
+
+    # Redirect to the import details page
+    return jsonify({'status': 'success', 'import_books': import_books}), 200
+
 
 @import_bp.route('/confirm_import_api', methods=['POST'])
 def confirm_import_api():
