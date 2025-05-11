@@ -28,6 +28,9 @@ def fetch_book_data(title, limit):
         return {"error": str(e)}
 
 def fetch_book_data_api(title, limit):
+    # TODO we could also search by author, and so with
+    # https://openlibrary.org/search.json?q=the+lord+of+the+rings
+    # see https://openlibrary.org/dev/docs/api/search?v=43
     url = f"https://openlibrary.org/search.json?title={title}&fields=*&limit={limit}"
 
     try:
