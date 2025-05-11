@@ -1,13 +1,6 @@
-from datetime import datetime  
-import os
-from pathlib import Path
-from urllib.parse import urlparse
-from flask import Blueprint, app, jsonify, redirect, render_template, request
-from sqlalchemy import inspect, or_
-from book.book_types import EBOOK
+from flask import Blueprint, jsonify, redirect, render_template, request
+from sqlalchemy import or_
 from models import Book, db
-import requests
-from PIL import Image
 from book.thumbnails import make_tiny_cover_image, download_cover_image
 
 books_bp = Blueprint('books', __name__, url_prefix='/books')
@@ -163,3 +156,16 @@ def add_book_api():
 
     db.session.commit()
     return jsonify(book.as_dict()), 201
+
+@books_bp.route('/api/byid', methods=['GET'])
+def list_books_by_ids():
+    ids_to_filter = request.args.get('ids', '')
+
+    if ids_to_filter:
+        # Filter books by IDs
+        ids_to_filter = [int(id) for id in ids_to_filter.split(',')]
+        existing_books = Book.query.filter(Book.id.in_(ids_to_filter)).all()
+        return jsonify([book.as_dict() for book in existing_books])
+    else:
+        return jsonify({"error": "No IDs provided"}), 400
+
