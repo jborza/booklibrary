@@ -1,6 +1,6 @@
 import csv
 from io import StringIO
-from flask import Blueprint, redirect, render_template, request, url_for, flash, session
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for, flash, session
 from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 from metadata.openlibrary import get_book_data
@@ -48,16 +48,16 @@ def confirm_import():
     for i, result in enumerate(import_books):        
         action_suffix = result['author_name'] + result['title']
         action_id = f'action_{action_suffix}'
+        action = 'add'  # default action is to add a new book
         if action_id in request.form:
             action = request.form[action_id]
-        # default action is to add a new book
         if action == f'merge':
             # Find existing book by id
             existing_book = Book.query.get(result['existing_book_id'])
 
             if existing_book:
                 # Update existing book
-                update_book_fields(result, existing_book)                
+                update_book_fields(result, existing_book)
         else:
             # Create a new book
             new_book = Book()
@@ -243,3 +243,89 @@ def import_csv():
 
     # TODO remove, this page doesn't exist
     return render_template('goodreads_import_form.html')
+
+@import_bp.route('/import_csv_api', methods=['POST'])
+def import_csv_api():
+    if request.method != 'POST':
+        return jsonify({'status': 'error', 'message': 'Invalid request method'}), 405
+
+    if 'file' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No file part'}), 400
+
+    csv_file = request.files['file']
+    if csv_file.filename == '':
+        return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+
+    if csv_file:
+        try:
+            csv_text = csv_file.read().decode('utf-8')
+            csv_data = StringIO(csv_text)
+            reader = csv.DictReader(csv_data)
+            imported_count = 0
+            import_books = []
+
+            for row in reader:
+                import_book = BookImport(title=None, author_name=None)
+
+                title = row.get('Title')
+                author_name = row.get('Author')
+                isbn = row.get('ISBN')
+                isbn13 = row.get('ISBN13')
+                isbn = ", ".join([s for s in [isbn, isbn13] if s is not None])
+
+                average_rating = row.get('Average Rating')
+                number_of_pages = row.get('Number of Pages')
+                year_published = row.get('Year Published')
+                bookshelves = row.get('Bookshelves')
+
+                # Check for required fields
+                if not all([title, author_name]):
+                    print(f"Skipping row with missing data: {row}")
+                    continue
+
+                # Convert data types
+                try:
+                    average_rating = float(average_rating) if average_rating else None
+                    number_of_pages = int(number_of_pages) if number_of_pages else None
+                    year_published = int(year_published)
+                except ValueError as e:
+                    print(f"Skipping row due to invalid data: {row} - {e}")
+                    continue
+
+                # Handle bookshelves - can be currently-reading, to-read, read, wishlist
+                status = None
+                if bookshelves:
+                    bookshelves = [shelf.strip() for shelf in bookshelves.split(',')]
+                    # maybe just use the shelf name as status
+                    for shelf in bookshelves:
+                        if shelf == 'currently-reading':
+                            status = CURRENTLY_READING
+                        elif shelf == 'to-read':
+                            status = TO_READ
+                        elif shelf == 'read':
+                            status = READ
+                        elif shelf == 'wishlist':
+                            status = WISHLIST
+
+                existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
+                if existing_book:
+                    print(f"Book already exists: {title} by {author_name}")
+                    import_book.existing_book = True
+                    import_book.existing_book_id = existing_book.id
+                
+                import_book.title = title
+                import_book.author_name = author_name
+                import_book.book_type = EBOOK
+                import_book.year_published = year_published
+                import_book.isbn = isbn
+                import_book.rating = average_rating
+                import_book.page_count = number_of_pages
+                import_book.status = status
+                import_books.append(import_book)
+                imported_count += 1
+
+            # session['import_books'] = import_books
+            return jsonify({'status': 'success', 'import_books': import_books}), 200
+        except Exception as e:
+            print(f"Error processing CSV file: {e}")
+            return jsonify({'status': 'error', 'message': 'Error processing CSV file'}), 500
