@@ -41,8 +41,8 @@
     <button class="btn btn-secondary" onclick="regenerateThumbnail({{ book.id }})">Regenerate Thumbnail</button>
     <button class="btn btn-secondary" onclick="regenerateThumbnailGoogle({{ book.id }})">Regenerate Thumbnail (G)</button>
     <a href="{{ url_for('book.edit_book', book_id=book.id) }}" class="btn btn-primary">Similar Books</a>
+    <a href="{{ url_for('book.match_book', book_id=book.id) }}" class="btn btn-primary">Match by search</a>
 
-    
 
     <script>
         function postActionJson(action, bookId, successCallback) {
