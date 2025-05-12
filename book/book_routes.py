@@ -172,3 +172,10 @@ def match_book(book_id):
         return redirect(url_for('book.book_detail', book_id=book.id))
     flash(f"Search completed", 'success')
     return jsonify(results)
+
+@book_bp.route('/<int:book_id>', methods=['DELETE'])
+def delete_book(book_id):
+    book = Book.query.get_or_404(book_id)
+    db.session.delete(book)
+    db.session.commit()
+    return jsonify({'status': 'success', 'message': 'Book deleted successfully'}), 200  
