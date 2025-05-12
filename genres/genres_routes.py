@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, redirect, render_template, url_for
+from flask import Blueprint, jsonify
 from models import Book
 
 genres_bp = Blueprint('genres', __name__, url_prefix='/genres')
