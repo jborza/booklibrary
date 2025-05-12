@@ -19,6 +19,7 @@ from book.book_routes import book_bp
 from tools.import_routes import import_bp
 from authors.authors_routes import authors_bp
 from genres.genres_routes import genres_bp
+from series.series_routes import series_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
@@ -33,6 +34,7 @@ app.register_blueprint(book_bp)
 app.register_blueprint(import_bp)
 app.register_blueprint(authors_bp)
 app.register_blueprint(genres_bp)
+app.register_blueprint(series_bp)
 
 @app.route('/')
 def home():
