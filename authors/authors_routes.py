@@ -14,6 +14,11 @@ def list_authors_api():
     query = Book.query.with_entities(Book.author_name).distinct().order_by(Book.author_name).all()
     authors = [r for (r, ) in query]
     authors = [{'name': author} for author in authors]
+    # generate also surnames
+    for author in authors:
+        author['surname'] = author['name'].split(' ')[-1]
+    # sort by surname
+    authors.sort(key=lambda x: x['surname'])
     return jsonify(authors=authors)
 
 @authors_bp.route('/<string:author_name>/api')
