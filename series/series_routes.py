@@ -21,6 +21,10 @@ def list_series_api():
     # add book cover image for each series
     for s in series:
         # retrieve all books in the series
-        books = Book.query.filter_by(series=s['name']).with_entities(Book.id).all()
-        s['books'] = [r for (r, ) in books]
+        cover_images = Book.query.filter_by(series=s['name']).with_entities(Book.cover_image).all()
+        # replace empty cover image with default image
+        s['cover_images'] = [r for (r, ) in cover_images]
+        s['cover_images'] = [img if img else 'placeholder_book.png' for img in s['cover_images']]
+        # remove duplicates
+        #cover_images = [(img if img else 'default_cover.png') for (img, ) in cover_images]
     return jsonify(series=series)
