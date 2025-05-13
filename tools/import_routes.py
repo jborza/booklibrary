@@ -370,10 +370,14 @@ def import_notes_api():
             format = EBOOK
         elif "epub" in line:
             format = EBOOK
+        elif "mobi" in line:
+            format = EBOOK
         elif "physical" in line:
             format = PHYSICAL
         elif "audiobook" in line:
             format = AUDIOBOOK
+        # remove the format from the title
+        title = title.replace("pdf", "").replace("epub", "").replace("mobi","").replace("physical", "").replace("audiobook", "")
 
         title = title.strip()
         author_name = author_name.strip()
