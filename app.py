@@ -28,6 +28,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_hex(16) # Generate a random secret key
 db.init_app(app)
 
+with app.app_context():
+    db.create_all()
+
 app.register_blueprint(search_bp)
 app.register_blueprint(books_bp)
 app.register_blueprint(book_bp)
