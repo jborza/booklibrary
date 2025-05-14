@@ -61,8 +61,8 @@ def search_books():
 @books_bp.route('/search_api')
 def search_books_api():
     query = request.args.get('search_query')
+    series = request.args.get('series')
     if query:
-        books = Book.query.filter(Book.title.ilike(f'%{query}%')).all()
         # Search books by title, author, ISBN, or year or genre
         books = Book.query.filter(
             or_(
@@ -74,6 +74,8 @@ def search_books_api():
                 Book.genre.ilike(f'%{query}%')  
             )
         ).all()
+    elif series:
+        books = Book.query.filter(Book.series.ilike(f'%{series}%')).all()
     else:
         books = Book.query.all()
     book_list = [book.as_dict() for book in books]
