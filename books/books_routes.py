@@ -44,6 +44,9 @@ def list_books_json():
     if book_status:
         filtered_books = filtered_books.filter_by(status=book_status)
 
+    # search by title by default
+    filtered_books = filtered_books.order_by(Book.title)
+
     books = filtered_books.all()
     book_list = [book.as_dict() for book in books]
     # Add a cover image URL for each book
