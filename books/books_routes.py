@@ -20,6 +20,16 @@ def list_books():
 
     return render_template('books.html', books=filtered_books.all())
 
+def add_cover_images(book_list : list):
+    # Add a cover image URL for each book
+    for book in book_list:
+        if book['cover_image']:
+            book['cover_image'] = book['cover_image']
+        else:
+            book['cover_image'] = 'placeholder_book.png'
+            book['cover_image_tiny'] = 'placeholder_book_tiny.png'
+    return book_list
+
 @books_bp.route('/api')  # Use a separate route for the API
 def list_books_json():
     # Parameters
@@ -36,6 +46,8 @@ def list_books_json():
 
     books = filtered_books.all()
     book_list = [book.as_dict() for book in books]
+    # Add a cover image URL for each book
+    add_cover_images(book_list)
 
     return jsonify(book_list), 200 
 
@@ -79,6 +91,8 @@ def search_books_api():
     else:
         books = Book.query.all()
     book_list = [book.as_dict() for book in books]
+    add_cover_images(book_list)
+
     return jsonify(book_list), 200 
 
 
