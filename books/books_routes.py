@@ -42,6 +42,7 @@ def list_books_json():
     # Parameters
     book_type = request.args.get('type')
     book_status = request.args.get('status')
+    count = request.args.get('count')
 
     # skip some columns
     excluded_columns = {'synopsis', 'cover_thumbnail', 'review', 'tags', 'genre', 'language', 'cover_image', 'page_count'}
@@ -58,6 +59,9 @@ def list_books_json():
         query = query.filter_by(book_type=book_type)
     if book_status:
         query = query.filter_by(status=book_status)
+
+    # just the first 'count' books
+    query = query.limit(count)
     # Execute the query
     results = db.session.execute(query).all()
 
