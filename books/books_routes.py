@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, redirect, render_template, request
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from models import Book, db
 from book.thumbnails import make_tiny_cover_image, download_cover_image
 
@@ -37,6 +37,102 @@ def add_cover_images_tiny(book_list : list):
             book['cover_image_tiny'] = 'placeholder_book_tiny.png'
     return book_list
 
+def get_authors(session, filters: dict):
+    """
+    Get a list of authors based on filters.
+
+    :param session: SQLAlchemy session
+    :param filters: Dictionary containing filters (e.g., genre, author, etc.)
+    :return: A list of authors
+    """
+    query = session.query(Book.author_name).order_by(Book.author_name).distinct()
+    # TODO Apply filters to the query
+    result = query.all()
+    # Convert result to a list of author names
+    authors = [author[0] for author in result]
+    return authors
+
+def get_genres(session, filters: dict):
+    """
+    Get a list of genres based on filters.
+
+    :param session: SQLAlchemy session
+    :param filters: Dictionary containing filters (e.g., genre, author, etc.)
+    :return: A list of genres
+    """
+    query = session.query(Book.genre).order_by(Book.genre).distinct()
+    # TODO Apply filters to the query
+    result = query.all()
+    # Convert result to a list of genre names
+    genres = [genre[0] for genre in result]
+    # remove the None values
+    genres = [g for g in genres if g is not None]
+    # split the genres if they are comma separated
+    genres = [g.strip() for genre in genres for g in genre.split(',')]
+    return genres
+
+def get_langages(session, filters: dict):
+    """
+    Get a list of languages based on filters.
+
+    :param session: SQLAlchemy session
+    :param filters: Dictionary containing filters (e.g., genre, author, etc.)
+    :return: A list of languages
+    """
+    query = session.query(Book.language).order_by(Book.language).distinct()
+    # TODO Apply filters to the query
+    result = query.all()
+    # Convert result to a list of language names
+    languages = [language[0] for language in result]
+    # remove the None values
+    languages = [l for l in languages if l is not None]
+    # split the genres if they are comma separated
+    languages = [l.strip() for lang in languages for l in lang.split(',')]
+    # remove duplicates
+    languages = list(set(languages))
+    return languages
+
+def get_series(session, filters: dict):
+    """
+    Get a list of series based on filters.
+
+    :param session: SQLAlchemy session
+    :param filters: Dictionary containing filters (e.g., genre, author, etc.)
+    :return: A list of series
+    """
+    query = session.query(Book.series).order_by(Book.series).distinct()
+    # TODO Apply filters to the query
+    result = query.all()
+    # Convert result to a list of series names
+    series = [s[0] for s in result]
+    # remove the None values
+    series = [s for s in series if s is not None]
+    return series
+
+def get_min_max_values(session, filters: dict):
+    """
+    Get minimum and maximum values for page_count, year, and rating based on filters.
+    
+    :param session: SQLAlchemy session
+    :param filters: Dictionary containing filters (e.g., genre, author, etc.)
+    :return: A dictionary containing min/max values for page_count, year, and rating
+    """
+    query = session.query(
+        func.min(Book.page_count).label("min_page_count"),
+        func.max(Book.page_count).label("max_page_count"),
+        func.min(Book.year_published).label("min_year"),
+        func.max(Book.year_published).label("max_year"),
+        func.min(Book.rating).label("min_rating"),
+        func.max(Book.rating).label("max_rating")
+    )
+    # TODO Apply filters to the query
+    result = query.one()
+    return {
+        "page_count": {"min": result.min_page_count, "max": result.max_page_count},
+        "year": {"min": result.min_year, "max": result.max_year},
+        "rating": {"min": result.min_rating, "max": result.max_rating},
+    }
+
 @books_bp.route('/api')  # Use a separate route for the API
 def list_books_json():
     # Parameters
@@ -60,6 +156,13 @@ def list_books_json():
     if book_status:
         query = query.filter_by(status=book_status)
 
+    # get the min/max value for page count, year, rating
+    minmax = get_min_max_values(db.session, {})
+    authors = get_authors(db.session, {})
+    genres = get_genres(db.session, {})
+    languages = get_langages(db.session, {})
+    series = get_series(db.session, {})
+
     # just the first 'count' books
     query = query.limit(count)
     # Execute the query
@@ -73,8 +176,14 @@ def list_books_json():
 
     # Add a cover image URL for each book
     add_cover_images_tiny(all_books)
+    result = {'books': all_books,
+              'minmax': minmax,
+              'authors': authors,
+              'genres': genres,
+              'languages': languages,
+              'series': series,}
 
-    return jsonify(all_books), 200 
+    return jsonify(result), 200
 
 @books_bp.route('/search')
 def search_books():
@@ -118,7 +227,7 @@ def search_books_api():
     book_list = [book.as_dict() for book in books]
     add_cover_images(book_list)
 
-    return jsonify(book_list), 200 
+    return jsonify(book_list), 200
 
 
 @books_bp.route('/add_book', methods=['POST'])
