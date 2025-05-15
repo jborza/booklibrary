@@ -20,6 +20,7 @@ class BookImport:
     isbn: str = None
     existing_book: bool = False
     existing_book_id: int = None
+    synopsis: str = None
 
 class DictToClass:
     def __init__(self, **entries):
@@ -89,7 +90,9 @@ def update_book_fields(result, book):
     if 'genre' in result:
         book.genre = result['genre']
     if 'language' in result:
-        book.language = result['language'] 
+        book.language = result['language']
+    if 'synopsis' in result:
+        book.synopsis = result['synopsis']
 
 @import_bp.route('/import_notes', methods=['GET', 'POST'])
 def import_notes():
@@ -268,14 +271,20 @@ def import_csv_api():
 
                 title = row.get('Title')
                 author_name = row.get('Author')
+                # if the author is in the format "Last, First", convert it to "First Last"
+                if ',' in author_name:
+                    author_name = author_name.split(',')[1].strip() + " " + author_name.split(',')[0].strip()
                 isbn = row.get('ISBN')
                 isbn13 = row.get('ISBN13')
-                isbn = ", ".join([s for s in [isbn, isbn13] if s is not None])
+                # prefer isbn13 if both are present
+                if isbn and isbn13:
+                    isbn = isbn13
 
                 average_rating = row.get('Average Rating')
                 number_of_pages = row.get('Number of Pages')
                 year_published = row.get('Year Published')
                 bookshelves = row.get('Bookshelves')
+                description = row.get('Description')
 
                 # Check for required fields
                 if not all([title, author_name]):
@@ -320,6 +329,7 @@ def import_csv_api():
                 import_book.rating = average_rating
                 import_book.page_count = number_of_pages
                 import_book.status = status
+                import_book.synopsis = description
                 import_books.append(import_book)
                 imported_count += 1
 
