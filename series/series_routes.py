@@ -25,6 +25,4 @@ def list_series_api():
         # replace empty cover image with default image
         s['cover_images'] = [r for (r, ) in cover_images]
         s['cover_images'] = [img if img else 'placeholder_book.png' for img in s['cover_images']]
-        # remove duplicates
-        #cover_images = [(img if img else 'default_cover.png') for (img, ) in cover_images]
     return jsonify(series=series)

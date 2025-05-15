@@ -34,12 +34,3 @@ class Book(db.Model):
             if isinstance(value, datetime):
                 book_dict[key] = value.isoformat()  # Convert datetime to ISO string
         return book_dict
-        # todo isn't there a better way to do this?
-        # return {
-        #     'id': self.id,
-        #     'title': self.title,
-        #     'author_name': self.author_name,
-        #     'book_type': self.book_type,
-        #     'status': self.status,
-        #     'date_added': self.date_added.isoformat() if self.date_added else None  # Handle datetime
-        # }
