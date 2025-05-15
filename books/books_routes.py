@@ -90,6 +90,7 @@ def get_langages(session, filters: dict):
     languages = [l.strip() for lang in languages for l in lang.split(',')]
     # remove duplicates
     languages = list(set(languages))
+    languages.sort()
     return languages
 
 def get_series(session, filters: dict):
