@@ -71,6 +71,7 @@ def fill_book_data(book: Book, data):
         'pages': 'page_count',
         'series': 'series',
         'tags': 'tags',
+        'page_count': 'page_count',
         # 'publisher': 'publisher',
         # 'cover_image': 'cover_image',
     }
