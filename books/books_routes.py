@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, redirect, render_template, request
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from models import Book, db
 from book.thumbnails import make_tiny_cover_image, download_cover_image
 
@@ -30,29 +30,47 @@ def add_cover_images(book_list : list):
             book['cover_image_tiny'] = 'placeholder_book_tiny.png'
     return book_list
 
+def add_cover_images_tiny(book_list : list):
+    # Add a cover image URL for each book
+    for book in book_list:
+        if not book['cover_image_tiny']:
+            book['cover_image_tiny'] = 'placeholder_book_tiny.png'
+    return book_list
+
 @books_bp.route('/api')  # Use a separate route for the API
 def list_books_json():
     # Parameters
     book_type = request.args.get('type')
     book_status = request.args.get('status')
 
-    all_books = Book.query
-    filtered_books = all_books
+    # skip some columns
+    excluded_columns = {'synopsis', 'cover_thumbnail', 'review', 'tags', 'genre', 'language', 'cover_image', 'page_count'}
 
-    if book_type:
-        filtered_books = filtered_books.filter_by(book_type=book_type)
-    if book_status:
-        filtered_books = filtered_books.filter_by(status=book_status)
+    # Dynamically include only the columns that are NOT in the excluded list
+    columns_to_select = [column for column in Book.__table__.columns if column.name not in excluded_columns]
 
+    # Create a query and select the columns
+    query = select(*columns_to_select)
     # search by title by default
-    filtered_books = filtered_books.order_by(Book.title)
+    query = query.order_by(Book.title)
+    # filter by book type and status
+    if book_type:
+        query = query.filter_by(book_type=book_type)
+    if book_status:
+        query = query.filter_by(status=book_status)
+    # Execute the query
+    results = db.session.execute(query).all()
 
-    books = filtered_books.all()
-    book_list = [book.as_dict() for book in books]
+    # Convert results to dictionaries
+    all_books = [
+        {column.name: value for column, value in zip(columns_to_select, row)}
+        for row in results
+    ]
+
     # Add a cover image URL for each book
-    add_cover_images(book_list)
+    add_cover_images_tiny(all_books)
 
-    return jsonify(book_list), 200 
+    return jsonify(all_books), 200 
 
 @books_bp.route('/search')
 def search_books():
