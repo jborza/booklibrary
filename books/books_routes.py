@@ -42,7 +42,16 @@ def add_cover_images_tiny(book_list : list):
 @books_bp.route('/api/authors', methods=['GET'])
 def list_authors():
     # TODO add filters
-    authors = get_authors(db.session, {})
+    book_type = request.args.get('type')
+    book_status = request.args.get('status')
+    search = request.args.get('search')
+    filter = BookFilter(
+        search=search,
+        book_type=book_type,
+        book_status=book_status,
+        # TODO add other filters
+    )
+    authors = get_authors(db.session, filter)
     return jsonify(authors), 200
 
 def get_authors(session, filters: dict):
@@ -180,7 +189,6 @@ def list_books_json():
     # Parameters
     book_type = request.args.get('type')
     book_status = request.args.get('status')
-    # count = request.args.get('count')
     page_size = int(request.args.get('page_size'))
     page = int(request.args.get('page'))
     search = request.args.get('search')
