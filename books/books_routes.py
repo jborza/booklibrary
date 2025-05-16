@@ -110,6 +110,19 @@ def get_series(session, filters: dict):
     series = [s for s in series if s is not None]
     return series
 
+def get_count(session, filters: dict):
+    """
+    Get the count of books based on filters.
+
+    :param session: SQLAlchemy session
+    :param filters: Dictionary containing filters (e.g., genre, author, etc.)
+    :return: A dictionary containing the count of books
+    """
+    query = session.query(func.count(Book.id).label("count"))
+    # TODO Apply filters to the query
+    result = query.one()
+    return result.count
+
 def get_min_max_values(session, filters: dict):
     """
     Get minimum and maximum values for page_count, year, and rating based on filters.
@@ -157,13 +170,6 @@ def list_books_json():
     if book_status:
         query = query.filter_by(status=book_status)
 
-    # get the min/max value for page count, year, rating
-    minmax = get_min_max_values(db.session, {})
-    authors = get_authors(db.session, {})
-    genres = get_genres(db.session, {})
-    languages = get_langages(db.session, {})
-    series = get_series(db.session, {})
-
     # just the first 'count' books
     query = query.limit(count)
     # Execute the query
@@ -175,6 +181,15 @@ def list_books_json():
         for row in results
     ]
 
+    # get the min/max value for page count, year, rating
+    # TODO add filters to all
+    minmax = get_min_max_values(db.session, {})
+    authors = get_authors(db.session, {})
+    genres = get_genres(db.session, {})
+    languages = get_langages(db.session, {})
+    series = get_series(db.session, {})
+    count = get_count(db.session, {})
+
     # Add a cover image URL for each book
     add_cover_images_tiny(all_books)
     result = {'books': all_books,
@@ -182,7 +197,9 @@ def list_books_json():
               'authors': authors,
               'genres': genres,
               'languages': languages,
-              'series': series,}
+              'series': series,
+              'count': count
+              }
 
     return jsonify(result), 200
 
