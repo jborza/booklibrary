@@ -5,6 +5,7 @@ class BookFilter:
     search: str = None
     author: str = None
     genre: str = None
+    series: str = None
     book_type: str = None
     book_status: str = None
     pages_min: int = None

@@ -54,7 +54,7 @@ def list_authors():
     authors = get_authors(db.session, filter)
     return jsonify(authors), 200
 
-def get_authors(session, filters: dict):
+def get_authors(session, filters: BookFilter):
     """
     Get a list of authors based on filters.
 
@@ -63,7 +63,7 @@ def get_authors(session, filters: dict):
     :return: A list of authors
     """
     query = session.query(Book.author_name).order_by(Book.author_name).distinct()
-    # TODO Apply filters to the query
+    query = filter_books(query, filters)
     result = query.all()
     # Convert result to a list of author names
     authors = [author[0] for author in result]
@@ -182,6 +182,14 @@ def filter_books(query, filter: BookFilter):
                 Book.year_published.ilike(f'%{search}%')
             )
         )
+    if filter.author:
+        query = query.filter(Book.author_name.ilike(f'%{filter.author}%'))
+    if filter.genre:
+        query = query.filter(Book.genre.ilike(f'%{filter.genre}%'))
+    if filter.language:
+        query = query.filter(Book.language.ilike(f'%{filter.language}%'))
+    if filter.series:
+        query = query.filter(Book.series.ilike(f'%{filter.series}%'))
     return query
 
 @books_bp.route('/api')  # Use a separate route for the API
@@ -189,13 +197,38 @@ def list_books_json():
     # Parameters
     book_type = request.args.get('type')
     book_status = request.args.get('status')
-    page_size = int(request.args.get('page_size'))
-    page = int(request.args.get('page'))
+    if 'page_size' in request.args:
+        page_size = int(request.args.get('page_size'))
+    else:
+        page_size = 50
+    if 'page' in request.args:
+        page = int(request.args.get('page'))
+    else:
+        page = 1
     search = request.args.get('search')
+    author = request.args.get('author')
+    genre = request.args.get('genre')
+    language = request.args.get('language')
+    series = request.args.get('series')
+    pages_min = request.args.get('pages_min')
+    pages_max = request.args.get('pages_max')
+    year_min = request.args.get('year_min')
+    year_max = request.args.get('year_max')
+    rating_min = request.args.get('rating_min')
+    rating_max = request.args.get('rating_max')
+    sort_ascending = request.args.get('sort_ascending')
+    if 'sort_column' in request.args:
+        sort_column = request.args.get('sort_column')
+    else:
+        sort_column = Book.title
     filter = BookFilter(
         search=search,
         book_type=book_type,
         book_status=book_status,
+        author=author,
+        genre=genre,
+        language=language,
+        series=series,
         # TODO add other filters
     )
 
@@ -209,7 +242,10 @@ def list_books_json():
     # Create a query and select the columns
     query = select(*columns_to_select)
     # search by title by default
-    query = query.order_by(Book.title)
+    if sort_ascending == 'true':
+        query = query.order_by(sort_column)
+    else:
+        query = query.order_by(sort_column.desc())
     # filter by book type and status
     query = filter_books(query, filter)
 
