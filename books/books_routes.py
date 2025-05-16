@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, redirect, render_template, request
 from sqlalchemy import func, or_, select
+from books.filters import BookFilter
 from models import Book, db
 from book.thumbnails import make_tiny_cover_image, download_cover_image
+from dataclasses import dataclass
 
 books_bp = Blueprint('books', __name__, url_prefix='/books')
 
@@ -10,7 +12,7 @@ def list_books():
     # parameters
     book_type = request.args.get('type')
     book_status = request.args.get('status')
-    all_books = Book.query 
+    all_books = Book.query
     filtered_books = all_books
 
     if book_type:
@@ -37,6 +39,12 @@ def add_cover_images_tiny(book_list : list):
             book['cover_image_tiny'] = 'placeholder_book_tiny.png'
     return book_list
 
+@books_bp.route('/api/authors', methods=['GET'])
+def list_authors():
+    # TODO add filters
+    authors = get_authors(db.session, {})
+    return jsonify(authors), 200
+
 def get_authors(session, filters: dict):
     """
     Get a list of authors based on filters.
@@ -52,7 +60,7 @@ def get_authors(session, filters: dict):
     authors = [author[0] for author in result]
     return authors
 
-def get_genres(session, filters: dict):
+def get_genres(session, filters: BookFilter):
     """
     Get a list of genres based on filters.
 
@@ -61,7 +69,7 @@ def get_genres(session, filters: dict):
     :return: A list of genres
     """
     query = session.query(Book.genre).order_by(Book.genre).distinct()
-    # TODO Apply filters to the query
+    query = filter_books(query, filters)
     result = query.all()
     # Convert result to a list of genre names
     genres = [genre[0] for genre in result]
@@ -71,7 +79,7 @@ def get_genres(session, filters: dict):
     genres = [g.strip() for genre in genres for g in genre.split(',')]
     return genres
 
-def get_langages(session, filters: dict):
+def get_langages(session, filters: BookFilter):
     """
     Get a list of languages based on filters.
 
@@ -80,7 +88,7 @@ def get_langages(session, filters: dict):
     :return: A list of languages
     """
     query = session.query(Book.language).order_by(Book.language).distinct()
-    # TODO Apply filters to the query
+    query = filter_books(query, filters)
     result = query.all()
     # Convert result to a list of language names
     languages = [language[0] for language in result]
@@ -93,16 +101,15 @@ def get_langages(session, filters: dict):
     languages.sort()
     return languages
 
-def get_series(session, filters: dict):
+def get_series(session, filters: BookFilter):
     """
     Get a list of series based on filters.
 
     :param session: SQLAlchemy session
-    :param filters: Dictionary containing filters (e.g., genre, author, etc.)
     :return: A list of series
     """
     query = session.query(Book.series).order_by(Book.series).distinct()
-    # TODO Apply filters to the query
+    query = filter_books(query, filters)
     result = query.all()
     # Convert result to a list of series names
     series = [s[0] for s in result]
@@ -110,7 +117,7 @@ def get_series(session, filters: dict):
     series = [s for s in series if s is not None]
     return series
 
-def get_count(session, filters: dict):
+def get_count(session, filters: BookFilter):
     """
     Get the count of books based on filters.
 
@@ -119,14 +126,15 @@ def get_count(session, filters: dict):
     :return: A dictionary containing the count of books
     """
     query = session.query(func.count(Book.id).label("count"))
+    query = filter_books(query, filters)
     # TODO Apply filters to the query
     result = query.one()
     return result.count
 
-def get_min_max_values(session, filters: dict):
+def get_min_max_values(session, filters: BookFilter):
     """
     Get minimum and maximum values for page_count, year, and rating based on filters.
-    
+
     :param session: SQLAlchemy session
     :param filters: Dictionary containing filters (e.g., genre, author, etc.)
     :return: A dictionary containing min/max values for page_count, year, and rating
@@ -139,7 +147,7 @@ def get_min_max_values(session, filters: dict):
         func.min(Book.rating).label("min_rating"),
         func.max(Book.rating).label("max_rating")
     )
-    # TODO Apply filters to the query
+    query = filter_books(query, filters)
     result = query.one()
     return {
         "page_count": {"min": result.min_page_count, "max": result.max_page_count},
@@ -147,12 +155,42 @@ def get_min_max_values(session, filters: dict):
         "rating": {"min": result.min_rating, "max": result.max_rating},
     }
 
+def filter_books(query, filter: BookFilter):
+    if filter.book_type:
+        query = query.filter_by(book_type=filter.book_type)
+    if filter.book_status:
+        query = query.filter_by(status=filter.book_status)
+
+    if filter.search:
+        # Search books by title, author, ISBN, or year
+        search = filter.search.lower()
+        query = query.filter(
+            or_(
+                # Use ilike for case-insensitive search
+                Book.title.ilike(f'%{search}%'),
+                Book.author_name.ilike(f'%{search}%'),
+                Book.isbn.ilike(f'%{search}%'),
+                Book.year_published.ilike(f'%{search}%')
+            )
+        )
+    return query
+
 @books_bp.route('/api')  # Use a separate route for the API
 def list_books_json():
     # Parameters
     book_type = request.args.get('type')
     book_status = request.args.get('status')
-    count = request.args.get('count')
+    # count = request.args.get('count')
+    page_size = int(request.args.get('page_size'))
+    page = int(request.args.get('page'))
+    search = request.args.get('search')
+    filter = BookFilter(
+        search=search,
+        book_type=book_type,
+        book_status=book_status,
+        # TODO add other filters
+    )
+
 
     # skip some columns
     excluded_columns = {'synopsis', 'cover_thumbnail', 'review', 'tags', 'genre', 'language', 'cover_image', 'page_count'}
@@ -165,13 +203,13 @@ def list_books_json():
     # search by title by default
     query = query.order_by(Book.title)
     # filter by book type and status
-    if book_type:
-        query = query.filter_by(book_type=book_type)
-    if book_status:
-        query = query.filter_by(status=book_status)
+    query = filter_books(query, filter)
 
     # just the first 'count' books
-    query = query.limit(count)
+    offset = page_size * (page - 1)
+    print('offset', offset, ' page_size', page_size)
+    query = query.offset(offset).limit(page_size)
+    # query = query.limit(count)
     # Execute the query
     results = db.session.execute(query).all()
 
@@ -183,18 +221,16 @@ def list_books_json():
 
     # get the min/max value for page count, year, rating
     # TODO add filters to all
-    minmax = get_min_max_values(db.session, {})
-    authors = get_authors(db.session, {})
-    genres = get_genres(db.session, {})
-    languages = get_langages(db.session, {})
-    series = get_series(db.session, {})
-    count = get_count(db.session, {})
+    minmax = get_min_max_values(db.session, filter)
+    genres = get_genres(db.session, filter)
+    languages = get_langages(db.session, filter)
+    series = get_series(db.session, filter)
+    count = get_count(db.session, filter)
 
     # Add a cover image URL for each book
     add_cover_images_tiny(all_books)
     result = {'books': all_books,
               'minmax': minmax,
-              'authors': authors,
               'genres': genres,
               'languages': languages,
               'series': series,
@@ -207,7 +243,7 @@ def list_books_json():
 def search_books():
     query = request.args.get('search_query')
     if query:        
-        books = Book.query.filter(Book.title.ilike(f'%{query}%')).all()
+        # books = Book.query.filter(Book.title.ilike(f'%{query}%')).all()
         # Search books by title, author, ISBN, or year
         books = Book.query.filter(
             or_(
@@ -215,7 +251,7 @@ def search_books():
                 Book.title.ilike(f'%{query}%'),
                 Book.author_name.ilike(f'%{query}%'),
                 Book.isbn.ilike(f'%{query}%'),
-                Book.year_published.ilike(f'%{query}%')  
+                Book.year_published.ilike(f'%{query}%')
             )
         ).all()
     else:
