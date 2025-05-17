@@ -2,6 +2,7 @@ import csv
 from io import StringIO
 import re
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for, flash, session
+from authors.authors_tools import fill_author_data
 from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 from metadata.openlibrary import get_book_data
@@ -455,10 +456,19 @@ def confirm_import_api():
 
             if existing_book:
                 # Update existing book
+                # TODO handle author
                 update_book_fields(result, existing_book)
         else:
             # Create a new book
+            author = Author.query.filter_by(name=result['author_name']).first()
+            if author is None:
+                # create a new author
+                author = Author()
+                fill_author_data(author, result)
+                db.session.add(author)
+                db.session.commit()
             new_book = Book()
+            new_book.author = author
             # add other fields if added
             update_book_fields(result, new_book)
             db.session.add(new_book)
