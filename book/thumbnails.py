@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 from urllib.parse import urlparse
 import requests
@@ -30,13 +31,8 @@ def download_cover_image(cover_image_url):
         response = requests.get(cover_image_url, stream=True)
         response.raise_for_status()  # Raise HTTPError for bad responses
 
-        # Extract filename from URL
-        parsed_url = urlparse(cover_image_url)
-        filename = Path(parsed_url.path).name
-        # google books doesn't return filename, so we need to generate one
-        if 'google' in cover_image_url:
-            # TODO check if filename already exists and generate a new one
-            filename = f"{secrets.token_hex(16)}.jpg"
+        # Extract filename from URL # TODO hash - import hashlib - hashlib.sha1(sample_string.encode()).hexdigest()
+        filename = hashlib.sha1(cover_image_url.encode()).hexdigest() + '.jpg'
 
         # Save the image to the 'covers' directory
         os.makedirs('./static/covers', exist_ok=True)
