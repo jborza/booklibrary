@@ -1,10 +1,12 @@
 import csv
 from io import StringIO
+import re
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for, flash, session
 from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 from metadata.openlibrary import get_book_data
-from models import Book, db
+from models import Author, Book, db
+from sqlalchemy.orm import joinedload
 from dataclasses import dataclass, field
 import_bp = Blueprint('import', __name__, url_prefix='/import')
 
@@ -135,7 +137,13 @@ def import_notes():
             author_name = author_name.strip()
 
             # Check if the book already exists in the database
-            existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
+            existing_book = (
+                session.query(Book)
+                .join(Author)  
+                .filter(Book.title.ilike(title))  
+                .filter(Author.name.ilike(author_name)) 
+                .first()  # Retrieve the first matching book
+            )
             if existing_book:
                 print(f"Book already exists: {title} by {author_name}")
                 import_book.existing_book = True
@@ -216,7 +224,13 @@ def import_csv():
                             elif shelf == 'wishlist':
                                 status = WISHLIST
 
-                    existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
+                    existing_book = (
+                        session.query(Book)
+                        .join(Author)  
+                        .filter(Book.title.ilike(title))  
+                        .filter(Author.name.ilike(author_name)) 
+                        .first()  # Retrieve the first matching book
+                    )
                     if existing_book:
                         print(f"Book already exists: {title} by {author_name}")
                         import_book.existing_book = True
@@ -279,6 +293,10 @@ def import_csv_api():
                 # prefer isbn13 if both are present
                 if isbn and isbn13:
                     isbn = isbn13
+                # goodreads isbn format looks like '="9781604865301"' - extract the value
+                match = re.search(r'"(\d+)"', isbn)
+                if match:
+                    isbn = match.group(1)
 
                 average_rating = row.get('Average Rating')
                 number_of_pages = row.get('Number of Pages')
@@ -315,7 +333,13 @@ def import_csv_api():
                         elif shelf == 'wishlist':
                             status = WISHLIST
 
-                existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
+                existing_book = (
+                    Book.query
+                    .join(Author)  
+                    .filter(Book.title.ilike(title))  
+                    .filter(Author.name.ilike(author_name)) 
+                    .first()  # Retrieve the first matching book
+                )
                 if existing_book:
                     print(f"Book already exists: {title} by {author_name}")
                     import_book.existing_book = True
@@ -393,7 +417,13 @@ def import_notes_api():
         author_name = author_name.strip()
 
         # Check if the book already exists in the database
-        existing_book = Book.query.filter(Book.title.ilike(title),Book.author_name.ilike(author_name)).first()
+        existing_book = (
+            Book.query
+            .join(Author)  
+            .filter(Book.title.ilike(title))  
+            .filter(Author.name.ilike(author_name)) 
+            .first()  # Retrieve the first matching book
+        )
         if existing_book:
             print(f"Book already exists: {title} by {author_name}")
             import_book.existing_book = True
