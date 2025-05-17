@@ -94,6 +94,9 @@ def get_genres(session, filters: BookFilter):
     genres = [g for g in genres if g is not None]
     # split the genres if they are comma separated
     genres = [g.strip() for genre in genres for g in genre.split(',')]
+    # remove duplicates
+    genres = list(set(genres))
+    genres.sort()
     return genres
 
 def get_langages(session, filters: BookFilter):
