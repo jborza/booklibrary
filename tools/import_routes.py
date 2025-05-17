@@ -1,10 +1,13 @@
 import csv
+from datetime import datetime
 from io import StringIO
+import itertools
 import re
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for, flash, session
+from flask import Blueprint, json, jsonify, redirect, render_template, request, url_for, flash, session
 from authors.authors_tools import fill_author_data
 from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
+from book.thumbnails import download_cover_image, make_tiny_cover_image
 from metadata.openlibrary import get_book_data
 from models import Author, Book, db
 from sqlalchemy.orm import joinedload
@@ -24,6 +27,10 @@ class BookImport:
     existing_book: bool = False
     existing_book_id: int = None
     synopsis: str = None
+    page_count: int = None
+    year_published: int = None
+    series: str = None
+    cover_image: str = None
 
 class DictToClass:
     def __init__(self, **entries):
@@ -261,6 +268,9 @@ def import_csv():
     # TODO remove, this page doesn't exist
     return render_template('goodreads_import_form.html')
 
+def lower_first(iterator):
+    return itertools.chain([next(iterator).lower()], iterator)
+
 @import_bp.route('/import_csv_api', methods=['POST'])
 def import_csv_api():
     if request.method != 'POST':
@@ -277,20 +287,20 @@ def import_csv_api():
         try:
             csv_text = csv_file.read().decode('utf-8')
             csv_data = StringIO(csv_text)
-            reader = csv.DictReader(csv_data)
+            reader = csv.DictReader(lower_first(csv_data))
             imported_count = 0
             import_books = []
 
             for row in reader:
                 import_book = BookImport(title=None, author_name=None)
 
-                title = row.get('Title')
-                author_name = row.get('Author')
+                title = row.get('title')
+                author_name = row.get('author')
                 # if the author is in the format "Last, First", convert it to "First Last"
                 if ',' in author_name:
                     author_name = author_name.split(',')[1].strip() + " " + author_name.split(',')[0].strip()
-                isbn = row.get('ISBN')
-                isbn13 = row.get('ISBN13')
+                isbn = row.get('isbn')
+                isbn13 = row.get('isbn13')
                 # prefer isbn13 if both are present
                 if isbn and isbn13:
                     isbn = isbn13
@@ -302,11 +312,42 @@ def import_csv_api():
                 if isbn == '=""':
                     isbn = None
 
-                average_rating = row.get('Average Rating')
-                number_of_pages = row.get('Number of Pages')
-                year_published = row.get('Year Published')
-                bookshelves = row.get('Bookshelves')
-                description = row.get('Description')
+                average_rating = row.get('average rating')
+                if not average_rating:
+                    average_rating = row.get('rating')
+                number_of_pages = row.get('number of pages')
+                if not number_of_pages:
+                    number_of_pages = row.get('pages')
+                year_published = row.get('year published')
+                # or publishDate?
+                if year_published == None:
+                    year_published = row.get('publishdate')
+                # it could be in this format: 09/14/08
+                try:
+                    date = datetime.strptime(year_published, '%m/%d/%y')
+                    year_published = date.year
+                except ValueError:
+                    pass
+
+                bookshelves = row.get('bookshelves')
+                description = row.get('description')
+                series = row.get('series')
+                # if series is in the format "Series Name #1", extract the name
+                if series:
+                    series = series.split('#')[0].strip()
+                cover_image = row.get('coverimg')
+                genres = row.get('genres')
+                # genres may be a json-formatted array, like "['Fiction', 'Fantasy']"
+                try:
+                    genres = json.loads(genres.replace('\'','\"'))
+                except json.JSONDecodeError as e:
+                    pass
+                if genres:
+                    # if genres is a list, join it into a string
+                    if isinstance(genres, list):
+                        genres = ', '.join(genres)
+                    else:
+                        genres = ', '.join([genre.strip() for genre in genres.split(',')])
 
                 # Check for required fields
                 if not all([title, author_name]):
@@ -339,9 +380,9 @@ def import_csv_api():
 
                 existing_book = (
                     Book.query
-                    .join(Author)  
-                    .filter(Book.title.ilike(title))  
-                    .filter(Author.name.ilike(author_name)) 
+                    .join(Author)
+                    .filter(Book.title.ilike(title))
+                    .filter(Author.name.ilike(author_name))
                     .first()  # Retrieve the first matching book
                 )
                 if existing_book:
@@ -358,13 +399,16 @@ def import_csv_api():
                 import_book.page_count = number_of_pages
                 import_book.status = status
                 import_book.synopsis = description
+                import_book.series = series
+                import_book.cover_image = cover_image
+                import_book.genre = genres
                 import_books.append(import_book)
                 imported_count += 1
-
             return jsonify({'status': 'success', 'import_books': import_books}), 200
         except Exception as e:
             print(f"Error processing CSV file: {e}")
             return jsonify({'status': 'error', 'message': 'Error processing CSV file'}), 500
+
 
 @import_bp.route('/import_notes_api', methods=['POST'])
 def import_notes_api():
@@ -474,6 +518,12 @@ def confirm_import_api():
             new_book.author = author
             # add other fields if added
             update_book_fields(result, new_book)
+            # download the cover image if present
+            if 'cover_image' in result:
+                cover_image = download_cover_image(result['cover_image'])
+                cover_image_tiny = make_tiny_cover_image(cover_image)
+                new_book.cover_image = cover_image
+                new_book.cover_image_tiny = cover_image_tiny
             db.session.add(new_book)
 
         db.session.commit()
