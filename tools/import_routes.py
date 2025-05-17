@@ -300,6 +300,9 @@ def import_csv_api():
                 # if the author is in the format "Last, First", convert it to "First Last"
                 if ',' in author_name:
                     author_name = author_name.split(',')[1].strip() + " " + author_name.split(',')[0].strip()
+                # sometimes it includes text in parentheses - remove it
+                if '(' in author_name and ')' in author_name:
+                    author_name = author_name[:author_name.index('(')].strip()
                 isbn = row.get('isbn')
                 isbn13 = row.get('isbn13')
                 # prefer isbn13 if both are present
@@ -335,8 +338,6 @@ def import_csv_api():
                 if year_published == 'Published':
                     year_published = row.get('firstpublishdate')
 
-                if title == 'Betrayal In Black':
-                    print(f"Title: {title}, Author: {author_name}, Year Published: {year_published}")
 
 
                 # it could be in this format: 09/14/08
@@ -557,10 +558,13 @@ def confirm_import_api():
             update_book_fields(result, new_book)
             # download the cover image if present
             if 'cover_image' in result:
-                cover_image = download_cover_image(result['cover_image'])
-                cover_image_tiny = make_tiny_cover_image(cover_image)
-                new_book.cover_image = cover_image
-                new_book.cover_image_tiny = cover_image_tiny
+                # well, don't do it, as we'll hit the limit - figure out a way to do it in the background
+                # and throttled
+                if(False):
+                    cover_image = download_cover_image(result['cover_image'])
+                    cover_image_tiny = make_tiny_cover_image(cover_image)
+                    new_book.cover_image = cover_image
+                    new_book.cover_image_tiny = cover_image_tiny
             db.session.add(new_book)
 
         db.session.commit()
