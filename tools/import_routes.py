@@ -4,7 +4,7 @@ from io import StringIO
 import itertools
 import re
 from flask import Blueprint, json, jsonify, redirect, render_template, request, url_for, flash, session
-from authors.authors_tools import fill_author_data
+from authors.authors_tools import fill_author_data, get_author_by_name
 from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 from book.thumbnails import download_cover_image, make_tiny_cover_image
@@ -545,13 +545,7 @@ def confirm_import_api():
                 update_book_fields(result, existing_book)
         else:
             # Create a new book
-            author = Author.query.filter_by(name=result['author_name']).first()
-            if author is None:
-                # create a new author
-                author = Author()
-                fill_author_data(author, result)
-                db.session.add(author)
-                db.session.commit()
+            author = get_author_by_name(result['author_name'].strip())
             new_book = Book()
             new_book.author = author
             # add other fields if added

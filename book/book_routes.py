@@ -1,5 +1,5 @@
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
-from authors.authors_tools import fill_author_data
+from authors.authors_tools import fill_author_data, get_author_by_name
 from models import Author, Book, db
 from metadata.openlibrary import get_book_data
 from metadata.google_books import search
@@ -94,13 +94,7 @@ def add_book_api():
         return jsonify({"error": "Invalid request, no JSON body found"}), 400
     fill_book_data(book, data)
     # maybe author already exists
-    author = Author.query.filter_by(name=data['author_name']).first()
-    if author is None:
-        # create a new author
-        author = Author()
-    fill_author_data(author, data)
-    db.session.add(author)
-    db.session.commit()
+    author = get_author_by_name(data['author_name'].strip())
     # add the book to the author
     book.author = author
     db.session.add(book)
