@@ -174,9 +174,9 @@ def get_min_max_values(session, filters: BookFilter):
 
 def filter_books(query, filter: BookFilter):
     if filter.book_type:
-        query = query.filter_by(book_type=filter.book_type)
+        query = query.filter(Book.book_type == filter.book_type)
     if filter.book_status:
-        query = query.filter_by(status=filter.book_status)
+        query = query.filter(Book.status == filter.book_status)
 
     if filter.search:
         # Search books by title, author, ISBN, or year
@@ -185,13 +185,13 @@ def filter_books(query, filter: BookFilter):
             or_(
                 # Use ilike for case-insensitive search
                 Book.title.ilike(f'%{search}%'),
-                Book.author_name.ilike(f'%{search}%'),
+                Author.name.ilike(f'%{search}%'),
                 Book.isbn.ilike(f'%{search}%'),
                 Book.year_published.ilike(f'%{search}%')
             )
         )
     if filter.author:
-        query = query.filter(Book.author_name.ilike(f'%{filter.author}%'))
+        query = query.filter(Author.name.ilike(f'%{filter.author}%'))
     if filter.genre:
         query = query.filter(Book.genre.ilike(f'%{filter.genre}%'))
     if filter.language:
@@ -242,14 +242,9 @@ def list_books_json():
 
 
     # skip some columns
-    excluded_columns = {'synopsis', 'cover_thumbnail', 'review', 'tags', 'genre', 'language', 'cover_image', 'page_count'}
-
-    # Dynamically include only the columns that are NOT in the excluded list
-    columns_to_select = [column for column in Book.__table__.columns if column.name not in excluded_columns]
-
-    # Create a query and select the columns
-    query = select(*columns_to_select)
-    # search by title by default
+    book_columns = ['id', 'title', 'year_published', 'rating', 'book_type', 'status', 'cover_image_tiny']
+    author_columns = ['name', 'surname_first']
+    query = Book.query.join(Author)
     if sort_ascending == 'true':
         query = query.order_by(sort_column)
     else:
@@ -261,18 +256,20 @@ def list_books_json():
     offset = page_size * (page - 1)
     print('offset', offset, ' page_size', page_size)
     query = query.offset(offset).limit(page_size)
-    # query = query.limit(count)
     # Execute the query
     results = db.session.execute(query).all()
 
     # Convert results to dictionaries
-    all_books = [
-        {column.name: value for column, value in zip(columns_to_select, row)}
-        for row in results
-    ]
+    all_books = []
+    for row in results:
+        book = row.Book
+        data = {col: getattr(book, col) for col in book_columns}
+        author = book.author
+        for acol in author_columns:
+            data[f'author_{acol}'] = getattr(author, acol, None)
+        all_books.append(data)
 
     # get the min/max value for page count, year, rating
-    # TODO add filters to all
     minmax = get_min_max_values(db.session, filter)
     genres = get_genres(db.session, filter)
     languages = get_langages(db.session, filter)
