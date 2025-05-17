@@ -144,7 +144,6 @@ def get_count(session, filters: BookFilter):
     """
     query = session.query(func.count(Book.id).label("count"))
     query = filter_books(query, filters)
-    # TODO Apply filters to the query
     result = query.one()
     return result.count
 

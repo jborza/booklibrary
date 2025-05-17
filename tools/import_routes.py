@@ -12,6 +12,7 @@ from metadata.openlibrary import get_book_data
 from models import Author, Book, db
 from sqlalchemy.orm import joinedload
 from dataclasses import dataclass, field
+import traceback
 import_bp = Blueprint('import', __name__, url_prefix='/import')
 
 
@@ -318,16 +319,52 @@ def import_csv_api():
                 number_of_pages = row.get('number of pages')
                 if not number_of_pages:
                     number_of_pages = row.get('pages')
+                # extract just the number from there
+                if number_of_pages:
+                    try:
+                        match = re.search(r'\d+', number_of_pages)
+                        if match:
+                            number_of_pages = match.group(0)
+                    except Exception:
+                        pass
                 year_published = row.get('year published')
                 # or publishDate?
                 if year_published == None:
                     year_published = row.get('publishdate')
+                # sometimes it says just 'Published' - take other column
+                if year_published == 'Published':
+                    year_published = row.get('firstpublishdate')
+
+                if title == 'Betrayal In Black':
+                    print(f"Title: {title}, Author: {author_name}, Year Published: {year_published}")
+
+
                 # it could be in this format: 09/14/08
                 try:
                     date = datetime.strptime(year_published, '%m/%d/%y')
                     year_published = date.year
                 except ValueError:
                     pass
+                # it could also be in this format: July 7th 2013
+                if isinstance(year_published, str):
+                    try:
+                        date_clean = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', year_published)
+                        dt = datetime.strptime(date_clean, "%B %d %Y")
+                        year_published = dt.year
+                    except Exception:
+                        pass
+                    # it could be 'December 2002'
+                if isinstance(year_published, str) and len(year_published) > 3:
+                    match = re.search(r'\b\d{4}\b', year_published)
+                    if match:
+                        year_published = match.group(0)
+                if year_published == '':
+                    year_published = None
+                # otherwise, disregard the value
+                if isinstance(year_published, str) and len(year_published) > 10:
+                    year_published = None
+
+
 
                 bookshelves = row.get('bookshelves')
                 description = row.get('description')
@@ -358,8 +395,8 @@ def import_csv_api():
                 try:
                     average_rating = float(average_rating) if average_rating else None
                     number_of_pages = int(number_of_pages) if number_of_pages else None
-                    year_published = int(year_published)
-                except ValueError as e:
+                    year_published = int(year_published) if year_published else None
+                except (ValueError, TypeError) as e:
                     print(f"Skipping row due to invalid data: {row} - {e}")
                     continue
 
@@ -389,7 +426,7 @@ def import_csv_api():
                     print(f"Book already exists: {title} by {author_name}")
                     import_book.existing_book = True
                     import_book.existing_book_id = existing_book.id
-                
+
                 import_book.title = title
                 import_book.author_name = author_name
                 import_book.book_type = EBOOK
