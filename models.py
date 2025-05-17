@@ -41,6 +41,10 @@ class Book(db.Model):
     series = db.Column(db.String(100))  # Series name if applicable
     tags = db.Column(db.String(200))  # Comma-separated tags for easy searching
     cover_thumbnail = db.Column(db.Text)  # URL or path to the thumbnail image
+    publisher = db.Column(db.String(200))  # Publisher name
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Date when the book was added
+
+
     def __repr__(self):
         return f'<Book {self.title}>'
     
