@@ -4,6 +4,7 @@ from models import Author, Book, db
 from metadata.openlibrary import get_book_data
 from metadata.google_books import search
 from book.thumbnails import make_tiny_cover_image, download_cover_image
+from sqlalchemy.orm import joinedload
 book_bp = Blueprint('book', __name__, url_prefix='/book')
 
 @book_bp.route('/<int:book_id>')
@@ -13,7 +14,7 @@ def book_detail(book_id):
 
 @book_bp.route('/api/<int:book_id>')
 def book_detail_api(book_id):
-    book = Book.query.get_or_404(book_id)
+    book = Book.query.options(joinedload(Book.author)).get_or_404(book_id)
     return jsonify(book.as_dict())
 
 @book_bp.route('/<int:book_id>/edit', methods=['GET', 'POST'])
@@ -117,6 +118,15 @@ def edit_book_api(book_id):
     if not data:
         return jsonify({"error": "Invalid request, no JSON body found"}), 400
     fill_book_data(book, data)
+    # author data
+    author = Author.query.filter_by(name=data['author_name']).first()
+    if author is None:
+        # create a new author
+        author = Author()
+        fill_author_data(author, data)
+        db.session.add(author)
+        db.session.commit()
+    book.author = author
     # handle cover image URL
     if 'cover_image' in data and data['cover_image'] is not None:
         download_thumbnail(book, data)

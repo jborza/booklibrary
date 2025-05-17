@@ -46,9 +46,12 @@ class Book(db.Model):
     
     def as_dict(self):
         book_dict = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+        # include author data
+        book_dict['author_name'] = self.author.name if self.author else None
 
         # Handle date serialization (if necessary)
         for key, value in book_dict.items():
             if isinstance(value, datetime):
                 book_dict[key] = value.isoformat()  # Convert datetime to ISO string
         return book_dict
+
