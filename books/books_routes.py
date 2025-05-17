@@ -198,6 +198,20 @@ def filter_books(query, filter: BookFilter):
         query = query.filter(Book.language.ilike(f'%{filter.language}%'))
     if filter.series:
         query = query.filter(Book.series.ilike(f'%{filter.series}%'))
+    # rating, pages, year
+    if filter.rating_min:
+        query = query.filter(Book.rating >= filter.rating_min)
+    if filter.rating_max:
+        query = query.filter(Book.rating <= filter.rating_max)
+    if filter.pages_min:
+        query = query.filter(Book.page_count >= filter.pages_min)
+    if filter.pages_max:
+        query = query.filter(Book.page_count <= filter.pages_max)
+    if filter.year_min:
+        query = query.filter(Book.year_published >= filter.year_min)
+    if filter.year_max:
+        query = query.filter(Book.year_published <= filter.year_max)
+
     return query
 
 @books_bp.route('/api')  # Use a separate route for the API
@@ -238,6 +252,12 @@ def list_books_json():
         language=language,
         series=series,
         # TODO add other filters
+        rating_min=rating_min,
+        rating_max=rating_max,
+        pages_min=pages_min,
+        pages_max=pages_max,
+        year_min=year_min,
+        year_max=year_max,
     )
 
 
@@ -254,7 +274,6 @@ def list_books_json():
 
     # just the first 'count' books
     offset = page_size * (page - 1)
-    print('offset', offset, ' page_size', page_size)
     query = query.offset(offset).limit(page_size)
     # Execute the query
     results = db.session.execute(query).all()
