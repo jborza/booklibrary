@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, redirect, render_template, url_for
-from models import Book
+from models import Author, Book
 
 authors_bp = Blueprint('authors', __name__, url_prefix='/authors')
 
@@ -11,14 +11,9 @@ def list_authors():
 
 @authors_bp.route('/api')
 def list_authors_api():
-    query = Book.query.with_entities(Book.author_name).distinct().order_by(Book.author_name).all()
-    authors = [r for (r, ) in query]
-    authors = [{'name': author} for author in authors]
-    # generate also surnames
-    for author in authors:
-        author['surname'] = author['name'].split(' ')[-1]
-    # sort by surname
-    authors.sort(key=lambda x: x['surname'])
+    query = Author.query.order_by(Author.surname_first).all()
+    # take name and surname
+    authors = [a.as_dict() for a in query]
     return jsonify(authors=authors)
 
 @authors_bp.route('/<string:author_name>/api')

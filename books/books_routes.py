@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, redirect, render_template, request
 from sqlalchemy import func, or_, select
 from books.filters import BookFilter
-from models import Book, db
+from models import Author, Book, db
 from book.thumbnails import make_tiny_cover_image, download_cover_image
 from dataclasses import dataclass
 
@@ -62,8 +62,18 @@ def get_authors(session, filters: BookFilter):
     :param filters: Dictionary containing filters (e.g., genre, author, etc.)
     :return: A list of authors
     """
-    query = session.query(Book.author_name).order_by(Book.author_name).distinct()
+
+    #query = session.query(Book.author_name).order_by(Book.author_name).distinct()
+    query = (
+        session.query(Author.name)
+        .join(Book)
+        .order_by(Author.name)
+        .distinct()
+    )
+
+    #query = session.query(Book)
     query = filter_books(query, filters)
+
     result = query.all()
     # Convert result to a list of author names
     authors = [author[0] for author in result]
@@ -417,3 +427,30 @@ def list_books_by_ids():
     else:
         return jsonify({"error": "No IDs provided"}), 400
 
+@books_bp.route('/update_books_api', methods=['POST'])
+def update_books_api():
+    # Parse the JSON payload
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+    book_ids = data.get('book_ids', [])
+    if not book_ids:
+        return jsonify({"error": "No book IDs provided"}), 400
+    items = data.get('data', [])
+    if not items:
+        return jsonify({"error": "No data provided"}), 400
+    # Loop through the book IDs and update each book
+    for book_id in book_ids:
+        # Find the book by ID
+        book = Book.query.get(book_id)
+        if not book:
+            return jsonify({"error": f"Book with ID {book_id} not found"}), 404
+
+        # Update the book's attributes
+        for key, value in items.items():
+            setattr(book, key, value)
+
+        # Commit the changes to the database
+        db.session.commit()
+
+    return jsonify({"status": "success", "message": "Books updated successfully"}), 200
