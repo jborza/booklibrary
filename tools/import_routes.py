@@ -298,6 +298,9 @@ def import_csv_api():
                 match = re.search(r'"(\d+)"', isbn)
                 if match:
                     isbn = match.group(1)
+                # sometimes isbn stays like ="" - in this case it's empty
+                if isbn == '=""':
+                    isbn = None
 
                 average_rating = row.get('Average Rating')
                 number_of_pages = row.get('Number of Pages')
@@ -421,7 +424,7 @@ def import_notes_api():
         existing_book = (
             Book.query
             .join(Author)  
-            .filter(Book.title.ilike(title))  
+            .filter(Book.title.ilike(title))
             .filter(Author.name.ilike(author_name)) 
             .first()  # Retrieve the first matching book
         )

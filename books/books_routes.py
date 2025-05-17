@@ -63,7 +63,6 @@ def get_authors(session, filters: BookFilter):
     :return: A list of authors
     """
 
-    #query = session.query(Book.author_name).order_by(Book.author_name).distinct()
     query = (
         session.query(Author.name)
         .join(Book)
@@ -71,7 +70,6 @@ def get_authors(session, filters: BookFilter):
         .distinct()
     )
 
-    #query = session.query(Book)
     query = filter_books(query, filters)
 
     result = query.all()
@@ -425,7 +423,7 @@ def list_books_by_ids():
         existing_books = Book.query.filter(Book.id.in_(ids_to_filter)).all()
         return jsonify([book.as_dict() for book in existing_books])
     else:
-        return jsonify({"error": "No IDs provided"}), 400
+        return jsonify([]) # no IDs provided
 
 @books_bp.route('/update_books_api', methods=['POST'])
 def update_books_api():
