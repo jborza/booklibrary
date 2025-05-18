@@ -282,6 +282,7 @@ def list_books_json():
         "rating",
         "book_type",
         "status",
+        "cover_image",
         "cover_image_tiny",
     ]
     author_columns = ["name", "surname_first"]
@@ -317,6 +318,7 @@ def list_books_json():
     count = get_count(db.session, filter)
 
     # Add a cover image URL for each book
+    add_cover_images(all_books)
     add_cover_images_tiny(all_books)
     result = {
         "books": all_books,
