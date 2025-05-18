@@ -1,0 +1,20 @@
+from flask import Blueprint, jsonify
+from sqlalchemy.orm.exc import NoResultFound
+from book.thumbnails import download_cover_image, make_tiny_cover_image
+from models import db, Book
+
+downloader_bp = Blueprint('downloader', __name__, url_prefix='/download_book_covers')
+
+@downloader_bp.route('/')
+def download_book_covers():
+    # look in the database for books with a remote_image_url, fetch one
+    book = Book.query.filter(Book.remote_image_url.isnot(None)).first()
+    if not book:
+        return
+    url = book.remote_image_url
+    cover_image = download_cover_image(url)
+    book.cover_image = cover_image
+    book.cover_image_tiny = make_tiny_cover_image(cover_image)
+    book.remote_image_url = None
+    db.session.commit()
+    return jsonify({"message": "Cover image downloaded and saved."}), 200

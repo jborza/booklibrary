@@ -12,6 +12,7 @@ Flask application for a book management system.
 import secrets
 from flask import Flask, render_template, request, redirect, url_for
 from flask_cors import CORS
+from downloader import downloader
 from models import db, Book  
 from search.search_routes import search_bp
 from books.books_routes import books_bp  
@@ -20,6 +21,7 @@ from tools.import_routes import import_bp
 from authors.authors_routes import authors_bp
 from genres.genres_routes import genres_bp
 from series.series_routes import series_bp
+from downloader.downloader_routes import downloader_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
@@ -38,6 +40,7 @@ app.register_blueprint(import_bp)
 app.register_blueprint(authors_bp)
 app.register_blueprint(genres_bp)
 app.register_blueprint(series_bp)
+app.register_blueprint(downloader_bp)
 
 @app.route('/')
 def home():
@@ -93,6 +96,8 @@ def inject_menu():
     return dict(menu_sections=menu_sections)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
+
+with app.app_context():
+    db.create_all()
+    downloader.schedule_cover_download(app)
