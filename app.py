@@ -10,10 +10,10 @@ Flask application for a book management system.
 
 """
 import secrets
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, redirect, url_for
 from flask_cors import CORS
 from downloader import downloader
-from models import db, Book  
+from models import db
 from search.search_routes import search_bp
 from books.books_routes import books_bp  
 from book.book_routes import book_bp
@@ -45,55 +45,6 @@ app.register_blueprint(downloader_bp)
 @app.route('/')
 def home():
     return redirect(url_for('books.list_books'))
-
-@app.context_processor
-def inject_menu():
-    menu_sections = [
-        {
-            'title': '',
-            'items':[
-                {'name': 'Books', 'url': '/', 'icon': '📚'},
-            ]
-        },
-        {
-            'title': 'Library',
-            'items':[
-                {'name': 'Authors', 'url': '/authors', 'icon': '👤'},
-                {'name': 'Genres', 'url': '/genres', 'icon': '🎭'},
-            ]
-        },
-        {
-            'title': 'Collections',
-            'items': [
-                {'name': 'Ebooks', 'url': '/books?type=ebook', 'icon': '📲'},
-                {'name': 'Physical', 'url': '/books?type=physical', 'icon': '📙'},
-                {'name': 'Audiobooks', 'url': '/books?type=audiobook', 'icon': '🔊'}
-            ]
-        },
-        {
-            'title': 'Status',
-            'items': [
-                {'name': 'Read', 'url': '/books?status=read', 'icon': '✔'},
-                {'name': 'To Read', 'url': '/books?status=to-read', 'icon': '🔜'},
-                {'name': 'Currently Reading', 'url': '/books?status=currently-reading', 'icon': '⌛'},
-                {'name': 'Wishist', 'url': '/books?status=wishlist', 'icon': '💡'}
-            ]
-        },
-        {
-            'title': 'Tools',
-            'items': [
-                {'name': 'Import', 'url': '/import', 'icon': '📥'},
-                {'name': 'Export', 'url': '/export', 'icon': '📤'}
-            ]
-        },
-        {
-            'title':'',
-            'items': [
-                {'name': 'Add Book', 'url': '/add', 'icon': '➕'},
-            ]
-        }
-    ]
-    return dict(menu_sections=menu_sections)
 
 if __name__ == '__main__':
     app.run(debug=True)
