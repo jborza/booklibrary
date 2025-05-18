@@ -90,6 +90,8 @@ def update_book_fields(result, book):
     book.author_name = result['author_name']
     if 'year' in result:
         book.year_published = result['year']
+    if 'year_published' in result:
+        book.year_published = result['year_published']
     if 'isbn' in result: 
         book.isbn = result['isbn']
     if 'book_type' in result:
@@ -104,6 +106,12 @@ def update_book_fields(result, book):
         book.language = result['language']
     if 'synopsis' in result:
         book.synopsis = result['synopsis']
+    if 'series' in result:
+        book.series = result['series']
+    if 'tags' in result:
+        book.tags = result['tags']
+    if 'page_count' in result:
+        book.page_count = result['page_count']
 
 @import_bp.route('/import_notes', methods=['GET', 'POST'])
 def import_notes():
