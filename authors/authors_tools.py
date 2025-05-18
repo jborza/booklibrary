@@ -1,4 +1,5 @@
 from models import Author, db
+import re
 
 
 def fill_author_data(author: Author, name: str):
@@ -22,4 +23,23 @@ def get_author_by_name(name):
         fill_author_data(author, name)
         db.session.add(author)
         db.session.commit()
+    return author
+
+def extract_main_author(author_string):
+    # Split by comma, but not inside parentheses
+    parts = re.split(r',\s*(?![^()]*\))', author_string)
+    first = parts[0].strip()
+    # If the string contains only one comma AND no parentheses AND both sides have at least one space,
+    # treat as "Surname, Firstname" (possibly with multi-part first names)
+    if (
+        ',' in author_string
+        and len(parts) == 2
+        and '(' not in first
+        and not re.search(r'\(', parts[1])
+        and re.search(r'\w', parts[1])
+    ):
+        surname, rest = first, parts[1].strip()
+        return f"{rest} {surname}".strip()
+    # Otherwise, just return the first part, removing any parentheses annotation
+    author = re.sub(r'\s*\([^)]*\)', '', first).strip()
     return author

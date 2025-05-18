@@ -4,7 +4,7 @@ from io import StringIO
 import itertools
 import re
 from flask import Blueprint, json, jsonify, redirect, render_template, request, url_for, flash, session
-from authors.authors_tools import fill_author_data, get_author_by_name
+from authors.authors_tools import extract_main_author, fill_author_data, get_author_by_name
 from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 from book.thumbnails import download_cover_image, make_tiny_cover_image
@@ -305,12 +305,7 @@ def import_csv_api():
 
                 title = row.get('title')
                 author_name = row.get('author')
-                # if the author is in the format "Last, First", convert it to "First Last"
-                if ',' in author_name:
-                    author_name = author_name.split(',')[1].strip() + " " + author_name.split(',')[0].strip()
-                # sometimes it includes text in parentheses - remove it
-                if '(' in author_name and ')' in author_name:
-                    author_name = author_name[:author_name.index('(')].strip()
+                author_name = extract_main_author(author_name)
                 isbn = row.get('isbn')
                 isbn13 = row.get('isbn13')
                 # prefer isbn13 if both are present
@@ -397,6 +392,9 @@ def import_csv_api():
                         genres = ', '.join(genres)
                     else:
                         genres = ', '.join([genre.strip() for genre in genres.split(',')])
+                # if it's an empty list, set it to None
+                if isinstance(genres, list) and len(genres) == 0:
+                    genres = None
 
                 # Check for required fields
                 if not all([title, author_name]):
@@ -435,7 +433,6 @@ def import_csv_api():
                     .first()  # Retrieve the first matching book
                 )
                 if existing_book:
-                    print(f"Book already exists: {title} by {author_name}")
                     import_book.existing_book = True
                     import_book.existing_book_id = existing_book.id
 
@@ -551,8 +548,9 @@ def confirm_import_api():
 
             if existing_book:
                 # Update existing book
-                # TODO handle author
                 update_book_fields(result, existing_book)
+                author = get_author_by_name(result['author_name'].strip())
+                existing_book.author = author
         else:
             # Create a new book
             author = get_author_by_name(result['author_name'].strip())
@@ -560,15 +558,6 @@ def confirm_import_api():
             new_book.author = author
             # add other fields if added
             update_book_fields(result, new_book)
-            # download the cover image if present
-            if 'cover_image' in result:
-                # well, don't do it, as we'll hit the limit - figure out a way to do it in the background
-                # and throttled
-                if(False):
-                    cover_image = download_cover_image(result['cover_image'])
-                    cover_image_tiny = make_tiny_cover_image(cover_image)
-                    new_book.cover_image = cover_image
-                    new_book.cover_image_tiny = cover_image_tiny
             db.session.add(new_book)
 
         db.session.commit()
