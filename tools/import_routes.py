@@ -85,7 +85,7 @@ def confirm_import():
 
     return redirect(url_for('books.list_books'))
 
-def update_book_fields(result, book):
+def update_book_fields(result, book: Book):
     book.title = result['title']
     book.author_name = result['author_name']
     if 'year' in result:
@@ -112,6 +112,8 @@ def update_book_fields(result, book):
         book.tags = result['tags']
     if 'page_count' in result:
         book.page_count = result['page_count']
+    if 'cover_image' in result:
+        book.remote_image_url = result['cover_image']
 
 @import_bp.route('/import_notes', methods=['GET', 'POST'])
 def import_notes():
@@ -162,7 +164,6 @@ def import_notes():
                 .first()  # Retrieve the first matching book
             )
             if existing_book:
-                print(f"Book already exists: {title} by {author_name}")
                 import_book.existing_book = True
                 import_book.existing_book_id = existing_book.id
 
@@ -249,7 +250,6 @@ def import_csv():
                         .first()  # Retrieve the first matching book
                     )
                     if existing_book:
-                        print(f"Book already exists: {title} by {author_name}")
                         import_book.existing_book = True
                         import_book.existing_book_id = existing_book.id
                     
@@ -322,6 +322,9 @@ def import_csv_api():
                     isbn = match.group(1)
                 # sometimes isbn stays like ="" - in this case it's empty
                 if isbn == '=""':
+                    isbn = None
+                # sometimes it's 9999999999999 - remove it
+                if isbn == '9999999999999':
                     isbn = None
 
                 average_rating = row.get('average rating')
@@ -519,7 +522,6 @@ def import_notes_api():
             .first()  # Retrieve the first matching book
         )
         if existing_book:
-            print(f"Book already exists: {title} by {author_name}")
             import_book.existing_book = True
             import_book.existing_book_id = existing_book.id
 

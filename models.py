@@ -42,8 +42,8 @@ class Book(db.Model):
     tags = db.Column(db.String(200))  # Comma-separated tags for easy searching
     cover_thumbnail = db.Column(db.Text)  # URL or path to the thumbnail image
     publisher = db.Column(db.String(200))  # Publisher name
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Date when the book was added
-
+    created_at = db.Column(db.DateTime, default=datetime.now)  # Date when the book was added
+    remote_image_url = db.Column(db.String(400))  # URL of the remote image
 
     def __repr__(self):
         return f'<Book {self.title}>'
