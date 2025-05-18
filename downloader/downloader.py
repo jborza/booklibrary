@@ -2,7 +2,7 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 import urllib.request
 
-def download_book_covers():
+def request_cover_download():
     # just get /download_book_covers url
     urllib.request.urlopen('http://localhost:5000/download_book_covers')
     return
@@ -11,9 +11,9 @@ def download_book_covers():
 def schedule_cover_download(app):
     # Schedule the download_book_covers function to run every second
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func = download_book_covers,
+    scheduler.add_job(func = request_cover_download,
                       trigger='interval',
-                      seconds=1,
+                      seconds=5, # TODO configure this
                       id='download_book_covers',)
     scheduler.start()
     # Set the logging level for the scheduler to ERROR to avoid too much output
