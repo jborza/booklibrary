@@ -10,7 +10,10 @@ def recommend_books(target_book, session, top_n=10):
     # collect book genre ids
     target_genres = set(get_genres_ids(target_book.genre))
     # grab all other books from the database, with id and genres
-    other_books = session.query(OtherBook.id, OtherBook.genre_ids).filter(OtherBook.genre_ids != None).filter(OtherBook.genre_ids != '').all()
+    other_books = session.query(OtherBook.id, OtherBook.genre_ids).filter(OtherBook.genre_ids != None).filter(OtherBook.genre_ids != '')
+    # skip this author as we'd like to recommend books from other authors
+    other_books = other_books.filter(OtherBook.author_id != target_book.author_id).all()
+    
     # maybe move them to a dictionary id:genre_ids
     scores = []
     for book in other_books:
