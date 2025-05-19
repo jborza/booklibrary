@@ -49,8 +49,8 @@ def home():
 
 @app.route('/test')
 def test():
-    girlboss = 37
-    recommendations = get_recommendations_for_book(girlboss, 10)
+    id = 452
+    recommendations = get_recommendations_for_book(id, 10)
     for rec in recommendations:
         print(rec.title)
     titles = [rec.title for rec in recommendations]

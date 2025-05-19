@@ -8,6 +8,8 @@ def get_genres_ids(genres):
     :param genres: list of genres
     :return: list of genre ids
     """
+    if not genres:
+        return []
     # it's a comma-separated string, convert it to a list
     genre_list = genres.split(',') if isinstance(genres, str) else genres
     genre_list = [genre.strip() for genre in genre_list]

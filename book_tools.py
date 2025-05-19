@@ -57,6 +57,8 @@ def extract_year(row):
     return year_published
 
 def extract_genres(genres):
+    if genres is None:
+        return None
     # genres may be a json-formatted array, like "['Fiction', 'Fantasy']"
     try:
         genres = json.loads(genres.replace('\'','\"'))
@@ -70,7 +72,7 @@ def extract_genres(genres):
             genres = ', '.join([genre.strip() for genre in genres.split(',')])
     # if it's an empty list, set it to None
     if isinstance(genres, list) and len(genres) == 0:
-        genres = None
+        return None
     return genres
 
 def extract_status(bookshelves):
