@@ -24,6 +24,7 @@ from genres.genres_routes import genres_bp
 from series.series_routes import series_bp
 from downloader.downloader_routes import downloader_bp
 from recommendations.recommendations_routes import recommendations_bp
+from tools.fix import fix_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
@@ -44,6 +45,7 @@ app.register_blueprint(genres_bp)
 app.register_blueprint(series_bp)
 app.register_blueprint(downloader_bp)
 app.register_blueprint(recommendations_bp)
+app.register_blueprint(fix_bp)
 
 @app.route('/')
 def home():
