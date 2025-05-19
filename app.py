@@ -14,7 +14,7 @@ from flask import Flask, jsonify, redirect, url_for
 from flask_cors import CORS
 from downloader import downloader
 from genres.genre_recommendation import get_recommendations_for_book
-from models import db
+from models import Author, Book, OtherBook, db
 from search.search_routes import search_bp
 from books.books_routes import books_bp  
 from book.book_routes import book_bp
@@ -49,12 +49,21 @@ def home():
 
 @app.route('/test')
 def test():
-    id = 452
-    recommendations = get_recommendations_for_book(id, 10)
+    id = 1403
+    recommended_book_ids = get_recommendations_for_book(id, 20)
+    # load the book data - grab title, author
+    titles_authors = OtherBook.query.join(Author).filter(OtherBook.id.in_(recommended_book_ids)).all()
+    # grab the titles and authors
+    recommendations = []
+    for rec in titles_authors:
+        recommendations.append({
+            'title': rec.title,
+            'author': rec.author.name if rec.author else None
+        })        
+    
     for rec in recommendations:
-        print(rec.title)
-    titles = [rec.title for rec in recommendations]
-    return jsonify(titles=titles)
+        print(rec)
+    return jsonify(recommendations)
 
 if __name__ == '__main__':
     app.run(debug=True)
