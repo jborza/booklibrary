@@ -10,9 +10,10 @@ Flask application for a book management system.
 
 """
 import secrets
-from flask import Flask, redirect, url_for
+from flask import Flask, jsonify, redirect, url_for
 from flask_cors import CORS
 from downloader import downloader
+from genres.genre_recommendation import get_recommendations_for_book
 from models import db
 from search.search_routes import search_bp
 from books.books_routes import books_bp  
@@ -46,9 +47,20 @@ app.register_blueprint(downloader_bp)
 def home():
     return redirect(url_for('books.list_books'))
 
+@app.route('/test')
+def test():
+    girlboss = 37
+    recommendations = get_recommendations_for_book(girlboss, 10)
+    for rec in recommendations:
+        print(rec.title)
+    titles = [rec.title for rec in recommendations]
+    return jsonify(titles=titles)
+
 if __name__ == '__main__':
     app.run(debug=True)
 
 with app.app_context():
     db.create_all()
-    downloader.schedule_cover_download(app)
+    # TODO re-enable later
+    #downloader.schedule_cover_download(app)
+
