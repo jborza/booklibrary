@@ -14,12 +14,17 @@ def list_authors_api(book_id):
     if count > 20:
         count = 20
     recommended_book_ids = get_recommendations_for_book(book_id, count)
+    print(f"Recommended book ids: {recommended_book_ids}")
+    id_to_index = {id_: index for index, id_ in enumerate(recommended_book_ids)}
     # load the book data - grab title, author
     titles_authors = OtherBook.query.join(Author).filter(OtherBook.id.in_(recommended_book_ids)).all()
+    # sort the titles_authors by the order of recommended_book_ids
+    titles_authors.sort(key=lambda x: id_to_index[x.id])
     # grab the titles and authors
     recommendations = []
     for rec in titles_authors:
         recommendations.append({
+            'id': rec.id,
             'title': rec.title,
             'author': rec.author.name if rec.author else None
         })        
