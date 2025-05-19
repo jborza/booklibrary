@@ -28,6 +28,7 @@ class BookImport:
     year_published: int = None
     series: str = None
     cover_image: str = None
+    language: str = None
 
 class DictToClass:
     def __init__(self, **entries):
@@ -64,6 +65,8 @@ def update_book_fields(result, book: Book):
         book.page_count = result['page_count']
     if 'cover_image' in result:
         book.remote_image_url = result['cover_image']
+    if 'language' in result:
+        book.language = result['language']
 
 
 def lower_first(iterator):
@@ -117,6 +120,8 @@ def import_csv_api():
 
                 bookshelves = row.get('bookshelves')
                 description = row.get('description')
+                language = row.get('language')
+                
                 series = row.get('series')
                 # if series is in the format "Series Name #1", extract the name
                 if series:
@@ -164,6 +169,7 @@ def import_csv_api():
                 import_book.series = series
                 import_book.cover_image = cover_image
                 import_book.genre = genres
+                import_book.language = language
                 import_books.append(import_book)
                 imported_count += 1
             return jsonify({'status': 'success', 'import_books': import_books}), 200
