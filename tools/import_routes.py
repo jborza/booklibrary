@@ -1,13 +1,13 @@
 import csv
-from datetime import datetime
 from io import StringIO
 import itertools
 import re
-from flask import Blueprint, json, jsonify, request
+from flask import Blueprint, jsonify, request
 from authors.authors_tools import extract_main_author, get_author_by_name
-from book.book_status import WISHLIST, CURRENTLY_READING, TO_READ, READ
 from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
-from models import Author, Book, db
+from book_tools import extract_genres, extract_isbn, extract_status, extract_year
+from genres.genres_db import get_genres_ids
+from models import Author, Book, OtherBook, db
 from dataclasses import dataclass
 import_bp = Blueprint('import', __name__, url_prefix='/import')
 
@@ -97,19 +97,7 @@ def import_csv_api():
                 author_name = extract_main_author(author_name)
                 isbn = row.get('isbn')
                 isbn13 = row.get('isbn13')
-                # prefer isbn13 if both are present
-                if isbn and isbn13:
-                    isbn = isbn13
-                # goodreads isbn format looks like '="9781604865301"' - extract the value
-                match = re.search(r'"(\d+)"', isbn)
-                if match:
-                    isbn = match.group(1)
-                # sometimes isbn stays like ="" - in this case it's empty
-                if isbn == '=""':
-                    isbn = None
-                # sometimes it's 9999999999999 - remove it
-                if isbn == '9999999999999':
-                    isbn = None
+                isbn = extract_isbn(isbn, isbn13)
 
                 average_rating = row.get('average rating')
                 if not average_rating:
@@ -125,42 +113,7 @@ def import_csv_api():
                             number_of_pages = match.group(0)
                     except Exception:
                         pass
-                year_published = row.get('year published')
-                # or publishDate?
-                if year_published == None:
-                    year_published = row.get('publishdate')
-                # sometimes it says just 'Published' - take other column
-                if year_published == 'Published':
-                    year_published = row.get('firstpublishdate')
-
-
-
-                # it could be in this format: 09/14/08
-                try:
-                    date = datetime.strptime(year_published, '%m/%d/%y')
-                    year_published = date.year
-                except ValueError:
-                    pass
-                # it could also be in this format: July 7th 2013
-                if isinstance(year_published, str):
-                    try:
-                        date_clean = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', year_published)
-                        dt = datetime.strptime(date_clean, "%B %d %Y")
-                        year_published = dt.year
-                    except Exception:
-                        pass
-                    # it could be 'December 2002'
-                if isinstance(year_published, str) and len(year_published) > 3:
-                    match = re.search(r'\b\d{4}\b', year_published)
-                    if match:
-                        year_published = match.group(0)
-                if year_published == '':
-                    year_published = None
-                # otherwise, disregard the value
-                if isinstance(year_published, str) and len(year_published) > 10:
-                    year_published = None
-
-
+                year_published = extract_year(row)
 
                 bookshelves = row.get('bookshelves')
                 description = row.get('description')
@@ -170,20 +123,7 @@ def import_csv_api():
                     series = series.split('#')[0].strip()
                 cover_image = row.get('coverimg')
                 genres = row.get('genres')
-                # genres may be a json-formatted array, like "['Fiction', 'Fantasy']"
-                try:
-                    genres = json.loads(genres.replace('\'','\"'))
-                except json.JSONDecodeError as e:
-                    pass
-                if genres:
-                    # if genres is a list, join it into a string
-                    if isinstance(genres, list):
-                        genres = ', '.join(genres)
-                    else:
-                        genres = ', '.join([genre.strip() for genre in genres.split(',')])
-                # if it's an empty list, set it to None
-                if isinstance(genres, list) and len(genres) == 0:
-                    genres = None
+                genres = extract_genres(genres)
 
                 # Check for required fields
                 if not all([title, author_name]):
@@ -198,21 +138,8 @@ def import_csv_api():
                 except (ValueError, TypeError) as e:
                     print(f"Skipping row due to invalid data: {row} - {e}")
                     continue
-
-                # Handle bookshelves - can be currently-reading, to-read, read, wishlist
-                status = None
-                if bookshelves:
-                    bookshelves = [shelf.strip() for shelf in bookshelves.split(',')]
-                    # maybe just use the shelf name as status
-                    for shelf in bookshelves:
-                        if shelf == 'currently-reading':
-                            status = CURRENTLY_READING
-                        elif shelf == 'to-read':
-                            status = TO_READ
-                        elif shelf == 'read':
-                            status = READ
-                        elif shelf == 'wishlist':
-                            status = WISHLIST
+                
+                status = extract_status(bookshelves)
 
                 existing_book = (
                     Book.query
@@ -352,3 +279,93 @@ def confirm_import_api():
         db.session.commit()
 
     return jsonify({'status': 'success', 'message': 'Books imported successfully'}), 200
+
+# Other (all) books import
+# TODO refactor
+@import_bp.route('/import_csv_all_api', methods=['POST'])
+def import_csv_all_api():
+    if request.method != 'POST':
+        return jsonify({'status': 'error', 'message': 'Invalid request method'}), 405
+
+    if 'file' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No file part'}), 400
+
+    csv_file = request.files['file']
+    if csv_file.filename == '':
+        return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+
+    if csv_file:
+        try:
+            csv_text = csv_file.read().decode('utf-8')
+            csv_data = StringIO(csv_text)
+            reader = csv.DictReader(lower_first(csv_data))
+            imported_count = 0
+
+            for row in reader:
+                title = row.get('title')
+                author_name = row.get('author')
+                author_name = extract_main_author(author_name)
+                isbn = row.get('isbn')
+                isbn13 = row.get('isbn13')
+                isbn = extract_isbn(isbn, isbn13)
+
+                average_rating = row.get('average rating')
+                if not average_rating:
+                    average_rating = row.get('rating')
+                year_published = extract_year(row)
+
+                description = row.get('description')
+                # shorten to 300 characters
+                if description and len(description) > 300:
+                    description = description[:300] + '...'
+                genres = row.get('genres')
+                genres = extract_genres(genres)
+                language = row.get('language')
+
+                # Check for required fields
+                if not all([title, author_name]):
+                    print(f"Skipping row with missing data: {row}")
+                    continue
+
+                # Convert data types
+                try:
+                    average_rating = float(average_rating) if average_rating else None
+                    year_published = int(year_published) if year_published else None
+                except (ValueError, TypeError) as e:
+                    print(f"Skipping row due to invalid data: {row} - {e}")
+                    continue
+                
+                book = None
+                existing_book = (
+                    OtherBook.query
+                    .join(Author)
+                    .filter(OtherBook.title.ilike(title))
+                    .filter(Author.name.ilike(author_name))
+                    .first()  # Retrieve the first matching book
+                )
+                if existing_book:
+                    book = existing_book
+                else:
+                    # Create a new book
+                    book = OtherBook()
+                    author = get_author_by_name(author_name.strip())
+                    book.author = author
+                    db.session.add(book)
+
+                book.title = title
+                book.book_type = EBOOK
+                book.year_published = year_published
+                book.isbn = isbn
+                book.rating = average_rating
+                book.synopsis = description
+                book.language = language
+                # push in genres
+                book.genre = genres
+                genre_ids = get_genres_ids(genres)
+                book.genre_ids = ','.join(map(str, genre_ids))
+                imported_count += 1
+            db.session.commit()
+            return jsonify({'status': f'success, imported {imported_count} books'}), 200
+        except Exception as e:
+            print(f"Error processing CSV file: {e}")
+            return jsonify({'status': 'error', 'message': 'Error processing CSV file'}), 500

@@ -11,6 +11,9 @@ class Author(db.Model):
     cover_image = db.Column(db.String(200))  # URL or path to the cover image
     cover_image_tiny = db.Column(db.String(200))  # URL or path to the small version of cover image
     description = db.Column(db.Text)
+    
+    def __repr__(self):
+        return f'<Author {self.title}>'
 
     def as_dict(self):
         dict = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
@@ -59,3 +62,45 @@ class Book(db.Model):
                 book_dict[key] = value.isoformat()  # Convert datetime to ISO string
         return book_dict
 
+class OtherBook(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('author.id'), nullable=False)  # Foreign key to Author
+    author = db.relationship('Author', backref=db.backref('otherbooks', lazy=True))
+    year_published = db.Column(db.Integer)
+    isbn = db.Column(db.String(20))  # ISBN number
+    rating = db.Column(db.Float)
+    genre = db.Column(db.Text) # List of genres (e.g., fiction, non-fiction, etc.)
+    genre_ids = db.Column(db.Text) # List of genre ids
+    language = db.Column(db.String(20))  # Language of the book
+    synopsis = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.now)  # Date when the book was added
+
+    def __repr__(self):
+        return f'<OtherBook {self.title}>'
+    
+    def as_dict(self):
+        book_dict = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+        # include author data
+        book_dict['author_name'] = self.author.name if self.author else None
+
+        # Handle date serialization (if necessary)
+        for key, value in book_dict.items():
+            if isinstance(value, datetime):
+                book_dict[key] = value.isoformat()  # Convert datetime to ISO string
+        return book_dict
+    
+class Genre(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+
+    def __repr__(self):
+        return f'<Genre {self.name}>'
+    
+    def as_dict(self):
+        genre_dict = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+        # Handle date serialization (if necessary)
+        for key, value in genre_dict.items():
+            if isinstance(value, datetime):
+                genre_dict[key] = value.isoformat()  # Convert datetime to ISO string
+        return genre_dict
