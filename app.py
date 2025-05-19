@@ -13,7 +13,7 @@ import secrets
 from flask import Flask, jsonify, redirect, url_for
 from flask_cors import CORS
 from downloader import downloader
-from genres.genre_recommendation import get_recommendations_for_book
+from recommendations.recommendations import get_recommendations_for_book
 from models import Author, Book, OtherBook, db
 from search.search_routes import search_bp
 from books.books_routes import books_bp  
@@ -23,6 +23,7 @@ from authors.authors_routes import authors_bp
 from genres.genres_routes import genres_bp
 from series.series_routes import series_bp
 from downloader.downloader_routes import downloader_bp
+from recommendations.recommendations_routes import recommendations_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
@@ -42,28 +43,11 @@ app.register_blueprint(authors_bp)
 app.register_blueprint(genres_bp)
 app.register_blueprint(series_bp)
 app.register_blueprint(downloader_bp)
+app.register_blueprint(recommendations_bp)
 
 @app.route('/')
 def home():
     return redirect(url_for('books.list_books'))
-
-@app.route('/test')
-def test():
-    id = 1403
-    recommended_book_ids = get_recommendations_for_book(id, 20)
-    # load the book data - grab title, author
-    titles_authors = OtherBook.query.join(Author).filter(OtherBook.id.in_(recommended_book_ids)).all()
-    # grab the titles and authors
-    recommendations = []
-    for rec in titles_authors:
-        recommendations.append({
-            'title': rec.title,
-            'author': rec.author.name if rec.author else None
-        })        
-    
-    for rec in recommendations:
-        print(rec)
-    return jsonify(recommendations)
 
 if __name__ == '__main__':
     app.run(debug=True)
