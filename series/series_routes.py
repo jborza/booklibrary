@@ -3,7 +3,7 @@ from models import Book
 
 series_bp = Blueprint('series', __name__, url_prefix='/series')
 
-SIZE_THUMBNAIL = (128, 200) 
+SIZE_THUMBNAIL = (128, 200)
 
 @series_bp.route('/api')
 def list_series_api():

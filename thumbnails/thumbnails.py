@@ -4,11 +4,11 @@ from urllib.parse import urlparse
 import requests
 from models import Book, db
 from PIL import Image
-import secrets
 
 import os
 
 THUMBNAIL_SIZE = (64, 64)  # Set the desired thumbnail size
+THUMBNAIL_SIZE_LARGE = (128, 200)
 
 
 def make_tiny_cover_image(cover_image):
@@ -18,6 +18,14 @@ def make_tiny_cover_image(cover_image):
     original_image.save(os.path.join("static", "covers", thumb_name), format="JPEG")
     return "covers/" + thumb_name  # Store relative path in DB
 
+def make_large_cover_image(cover_image, name):
+    original_image = Image.open( cover_image)
+    original_image.thumbnail(THUMBNAIL_SIZE_LARGE)
+    thumb_name = name
+    original_image = original_image.convert("RGB")
+    #thumb_name = "large_" + os.path.basename(cover_image)
+    original_image.save(os.path.join("static", "covers", thumb_name), format="JPEG")
+    return "covers/" + thumb_name  # Store relative path in DB
 
 def download_cover_image(cover_image_url):
     """

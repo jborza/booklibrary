@@ -8,3 +8,6 @@ static/covers/
 
 # notes
 todo.md
+
+# db backups
+instance/*.zip
