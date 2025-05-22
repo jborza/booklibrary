@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from sqlalchemy.orm.exc import NoResultFound
-from book.thumbnails import download_cover_image, make_tiny_cover_image
+from thumbnails.thumbnails import download_cover_image, make_tiny_cover_image
 from models import db, Book
 
 downloader_bp = Blueprint('downloader', __name__, url_prefix='/download_book_covers')

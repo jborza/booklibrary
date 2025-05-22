@@ -3,7 +3,7 @@ from authors.authors_tools import fill_author_data, get_author_by_name
 from models import Author, Book, db
 from metadata.openlibrary import get_book_data
 from metadata.google_books import search
-from book.thumbnails import make_tiny_cover_image, download_cover_image
+from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
 from sqlalchemy.orm import joinedload
 book_bp = Blueprint('book', __name__, url_prefix='/book')
 
@@ -30,7 +30,8 @@ def fill_book_data(book: Book, data):
         'tags': 'tags',
         'page_count': 'page_count',
         # 'publisher': 'publisher',
-        # 'cover_image': 'cover_image',
+        'cover_image': 'cover_image',
+        'cover_image_tiny': 'cover_image_tiny',
     }
 
     for key, attr in fields.items():
@@ -76,7 +77,7 @@ def edit_book_api(book_id):
         db.session.commit()
     book.author = author
     # handle cover image URL
-    if 'cover_image' in data and data['cover_image'] is not None:
+    if 'cover_image' in data and data['cover_image'] is not None and data['cover_image'].startswith('http'):
         download_thumbnail(book, data)
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'Book saved successfully'}), 200

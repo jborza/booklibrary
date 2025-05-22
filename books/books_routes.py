@@ -3,7 +3,7 @@ from sqlalchemy import func, or_
 from authors.authors_tools import get_author_by_name
 from books.filters import BookFilter
 from models import Author, Book, db
-from book.thumbnails import make_tiny_cover_image, download_cover_image
+from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
 
 books_bp = Blueprint("books", __name__, url_prefix="/books")
 

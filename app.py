@@ -10,13 +10,11 @@ Flask application for a book management system.
 
 """
 import secrets
-from flask import Flask, jsonify, redirect, url_for
+from flask import Flask, redirect, url_for
 from flask_cors import CORS
-from downloader import downloader
-from recommendations.recommendations import get_recommendations_for_book
-from models import Author, Book, OtherBook, db
+from models import db
 from search.search_routes import search_bp
-from books.books_routes import books_bp  
+from books.books_routes import books_bp
 from book.book_routes import book_bp
 from tools.import_routes import import_bp
 from authors.authors_routes import authors_bp
@@ -25,6 +23,7 @@ from series.series_routes import series_bp
 from downloader.downloader_routes import downloader_bp
 from recommendations.recommendations_routes import recommendations_bp
 from tools.fix import fix_bp
+from thumbnails.thumbnails_routes import thumbnails_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
@@ -46,6 +45,7 @@ app.register_blueprint(series_bp)
 app.register_blueprint(downloader_bp)
 app.register_blueprint(recommendations_bp)
 app.register_blueprint(fix_bp)
+app.register_blueprint(thumbnails_bp)
 
 @app.route('/')
 def home():
