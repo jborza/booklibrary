@@ -75,6 +75,7 @@ class OtherBook(db.Model):
     language = db.Column(db.String(20))  # Language of the book
     synopsis = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.now)  # Date when the book was added
+    modified_at = db.Column(db.DateTime, onupdate=datetime.now)
 
     def __repr__(self):
         return f'<OtherBook {self.title}>'
