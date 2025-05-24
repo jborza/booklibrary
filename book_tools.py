@@ -7,6 +7,8 @@ from book.book_types import AUDIOBOOK, EBOOK, PHYSICAL
 
 def extract_isbn(isbn, isbn13):
     # prefer isbn13 if both are present
+    if not isbn and not isbn13:
+        return None
     if isbn and isbn13:
         isbn = isbn13
     # goodreads isbn format looks like '="9781604865301"' - extract the value
