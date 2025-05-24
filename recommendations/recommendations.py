@@ -19,7 +19,7 @@ def recommend_books(target_book, session, top_n=10):
     for book in other_books:
         # convert genre ids to a set of ids
         genre_ids = genres_to_ids(book.genre_ids)
-        # calculate the similarity score
+        # calculate the similarity score - Jaccard similarity
         sim = len(target_genres & genre_ids) / len(target_genres | genre_ids) if (target_genres | genre_ids) else 0
         # add the similarity score to the book object
         if sim == 0:
