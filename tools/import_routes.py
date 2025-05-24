@@ -67,6 +67,8 @@ def update_book_fields(result, book: Book):
         book.remote_image_url = result['cover_image']
     if 'language' in result:
         book.language = result['language']
+    if 'status' in result:
+        book.status = result['status']
 
 
 def lower_first(iterator):
@@ -309,6 +311,9 @@ def import_csv_all_api():
 
             for row in reader:
                 title = row.get('title')
+                if len(title) > 190:
+                    # truncate title to 190 characters
+                    title = title[:190] + "..."
                 author_name = row.get('author')
                 author_name = extract_main_author(author_name)
                 isbn = row.get('isbn')
@@ -327,6 +332,14 @@ def import_csv_all_api():
                 genres = row.get('genres')
                 genres = extract_genres(genres)
                 language = row.get('language')
+                # if language has commas, split it and take the first one
+                if language and ',' in language:
+                    language = language.split(',')[0].strip()
+                if language and ';' in language:
+                    language = language.split(';')[0].strip()
+                # strip to 20 characters
+                if language and len(language) > 20:
+                    language = language[:20]
 
                 # Check for required fields
                 if not all([title, author_name]):
