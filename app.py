@@ -28,7 +28,8 @@ from tools.ping_routes import ping_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://booklibrary:booklibrary@localhost:3306/booklibrary'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_hex(16) # Generate a random secret key
 db.init_app(app)
