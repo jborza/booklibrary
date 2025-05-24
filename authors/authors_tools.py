@@ -42,4 +42,6 @@ def extract_main_author(author_string):
         return f"{rest} {surname}".strip()
     # Otherwise, just return the first part, removing any parentheses annotation
     author = re.sub(r'\s*\([^)]*\)', '', first).strip()
+    # remove continuous spaces
+    author = re.sub(r'\s+', ' ', author)
     return author
