@@ -24,6 +24,7 @@ from downloader.downloader_routes import downloader_bp
 from recommendations.recommendations_routes import recommendations_bp
 from tools.fix import fix_bp
 from thumbnails.thumbnails_routes import thumbnails_bp
+from tools.ping_routes import ping_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
@@ -46,6 +47,7 @@ app.register_blueprint(downloader_bp)
 app.register_blueprint(recommendations_bp)
 app.register_blueprint(fix_bp)
 app.register_blueprint(thumbnails_bp)
+app.register_blueprint(ping_bp)
 
 @app.route('/')
 def home():
