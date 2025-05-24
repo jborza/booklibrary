@@ -229,6 +229,7 @@ def list_books_json():
     genre = request.args.get("genre")
     language = request.args.get("language")
     series = request.args.get("series")
+    status = request.args.get("status")
     pages_min = request.args.get("pages_min")
     pages_max = request.args.get("pages_max")
     year_min = request.args.get("year_min")
@@ -248,7 +249,6 @@ def list_books_json():
         genre=genre,
         language=language,
         series=series,
-        # TODO add other filters
         rating_min=rating_min,
         rating_max=rating_max,
         pages_min=pages_min,
