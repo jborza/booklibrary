@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import func, or_
 from authors.authors_tools import get_author_by_name
 from books.filters import BookFilter
+from books.search_options import NONE_OPTION
 from models import Author, Book, db
 from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
 
@@ -172,7 +173,10 @@ def filter_books(query, filter: BookFilter):
     if filter.book_type:
         query = query.filter(Book.book_type == filter.book_type)
     if filter.book_status:
-        query = query.filter(Book.status == filter.book_status)
+        if filter.book_status == NONE_OPTION:
+            query = query.filter(Book.status.is_(None))
+        else:
+            query = query.filter(Book.status == filter.book_status)
 
     if filter.search:
         # Search books by title, author, ISBN, or year
@@ -229,7 +233,6 @@ def list_books_json():
     genre = request.args.get("genre")
     language = request.args.get("language")
     series = request.args.get("series")
-    status = request.args.get("status")
     pages_min = request.args.get("pages_min")
     pages_max = request.args.get("pages_max")
     year_min = request.args.get("year_min")
