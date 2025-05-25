@@ -73,7 +73,7 @@ def edit_book_api(book_id):
     if author is None:
         # create a new author
         author = Author()
-        fill_author_data(author, data)
+        fill_author_data(author, data['author_name'])
         db.session.add(author)
         db.session.commit()
     book.author = author
