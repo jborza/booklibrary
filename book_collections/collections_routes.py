@@ -47,13 +47,3 @@ def remove_book_from_collection(collection_id, book_id):
         db.session.commit()
     return jsonify({"message": "Book removed from collection."}), 200
 
-# TODO move to books_routes.py, meh
-# GET /books/<int:book_id>/collections — List collections for a book
-@collections_bp.route('/books/<int:book_id>/collections', methods=['GET'])
-def get_collections_for_book(book_id):
-    book = Book.query.get_or_404(book_id)
-    collections = book.collections
-    return jsonify([
-        {"id": c.id, "name": c.name, "description": c.description}
-        for c in collections
-    ])
