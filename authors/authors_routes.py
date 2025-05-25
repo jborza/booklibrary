@@ -6,7 +6,8 @@ authors_bp = Blueprint('authors', __name__, url_prefix='/authors')
 
 @authors_bp.route('/api')
 def list_authors_api():
-    query = Author.query.order_by(Author.surname_first).all()
+    # take only those authors that have books
+    query = Author.query.filter(Author.books.any()).order_by(Author.surname_first).all()
     # take name and surname
     authors = [a.as_dict() for a in query]
     return jsonify(authors=authors)
