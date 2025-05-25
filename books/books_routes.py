@@ -400,6 +400,26 @@ def list_books_by_ids():
     else:
         return jsonify([])  # no IDs provided
 
+@books_bp.route("/delete_books_api", methods=["POST"])
+def delete_books_api():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+    book_ids = data.get("book_ids", [])
+    if not book_ids:
+        return jsonify({"error": "No book IDs provided"}), 400
+    # Loop through the book IDs and update each book
+    for book_id in book_ids:
+        # Find the book by ID
+        book = Book.query.get(book_id)
+        if not book:
+            return jsonify({"error": f"Book with ID {book_id} not found"}), 404
+        # Delete the book
+        db.session.delete(book)
+    # Commit the changes to the database
+    db.session.commit()
+    return jsonify({"status": "success", "message": "Books deleted successfully"}), 200
+    
 
 @books_bp.route("/update_books_api", methods=["POST"])
 def update_books_api():
