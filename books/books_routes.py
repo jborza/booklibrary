@@ -171,7 +171,10 @@ def get_min_max_values(session, filters: BookFilter):
 
 def filter_books(query, filter: BookFilter):
     if filter.book_type:
-        query = query.filter(Book.book_type == filter.book_type)
+        if filter.book_type == NONE_OPTION:
+            query = query.filter(Book.book_type.is_(None))
+        else:
+            query = query.filter(Book.book_type == filter.book_type)
     if filter.book_status:
         if filter.book_status == NONE_OPTION:
             query = query.filter(Book.status.is_(None))
@@ -193,11 +196,20 @@ def filter_books(query, filter: BookFilter):
     if filter.author:
         query = query.filter(Author.name.ilike(f"%{filter.author}%"))
     if filter.genre:
-        query = query.filter(Book.genre.ilike(f"%{filter.genre}%"))
+        if filter.genre == NONE_OPTION:
+            query = query.filter(Book.genre.is_(None))
+        else:
+            query = query.filter(Book.genre.ilike(f"%{filter.genre}%"))
     if filter.language:
-        query = query.filter(Book.language.ilike(f"%{filter.language}%"))
+        if filter.language == NONE_OPTION:
+            query = query.filter(Book.language.is_(None))
+        else:
+            query = query.filter(Book.language.ilike(f"%{filter.language}%"))
     if filter.series:
-        query = query.filter(Book.series.ilike(f"%{filter.series}%"))
+        if filter.series == NONE_OPTION:
+            query = query.filter(Book.series.is_(None))
+        else:
+            query = query.filter(Book.series.ilike(f"%{filter.series}%"))
     # rating, pages, year
     if filter.rating_min:
         query = query.filter(Book.rating >= filter.rating_min)
