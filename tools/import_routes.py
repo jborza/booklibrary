@@ -230,6 +230,8 @@ def import_notes_api():
             format = AUDIOBOOK
         # remove the format from the title
         title = title.replace("pdf", "").replace("epub", "").replace("mobi","").replace("physical", "").replace("audiobook", "")
+        # also from the author name
+        author_name = author_name.replace("pdf", "").replace("epub", "").replace("mobi","").replace("physical", "").replace("audiobook", "")
 
         title = title.strip()
         author_name = author_name.strip()
