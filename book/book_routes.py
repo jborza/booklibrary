@@ -32,6 +32,7 @@ def fill_book_data(book: Book, data):
         # 'publisher': 'publisher',
         'cover_image': 'cover_image',
         'cover_image_tiny': 'cover_image_tiny',
+        'notes': 'notes',
     }
 
     for key, attr in fields.items():

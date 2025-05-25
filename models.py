@@ -47,6 +47,7 @@ class Book(db.Model):
     publisher = db.Column(db.String(200))  # Publisher name
     created_at = db.Column(db.DateTime, default=datetime.now)  # Date when the book was added
     remote_image_url = db.Column(db.String(400))  # URL of the remote image
+    notes = db.Column(db.Text)  # Additional notes about the book
 
     def __repr__(self):
         return f'<Book {self.title}>'
