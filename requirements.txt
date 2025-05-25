@@ -7,3 +7,4 @@ python-dotenv
 flask-cors
 apscheduler
 PyMySQL
+cryptography
