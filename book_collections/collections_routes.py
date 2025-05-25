@@ -21,6 +21,8 @@ def get_collections_with_covers():
         item = {'name': collection.name, 'id': collection.id, 'description': collection.description}
 
         book_ids_list = [book.id for book in collection.books]
+        if not book_ids_list or len(book_ids_list) == 0:
+            continue
         # grab all books in the collections
         cover_images = Book.query.where(Book.id.in_(book_ids_list)).with_entities(Book.cover_image).all()
         # replace empty cover image with default image
