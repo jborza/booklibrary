@@ -24,6 +24,13 @@ class Author(db.Model):
                 dict[key] = value.isoformat()  # Convert datetime to ISO string
         return dict
 
+# Association table for many-to-many relationship
+book_collection = db.Table(
+    'book_collection',
+    db.Column('book_id', db.Integer, db.ForeignKey('book.id'), primary_key=True),
+    db.Column('collection_id', db.Integer, db.ForeignKey('collection.id'), primary_key=True)
+)
+
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -48,6 +55,12 @@ class Book(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)  # Date when the book was added
     remote_image_url = db.Column(db.String(400))  # URL of the remote image
     notes = db.Column(db.Text)  # Additional notes about the book
+    # Add collections relationship
+    collections = db.relationship(
+        'Collection',
+        secondary=book_collection,
+        back_populates='books'
+    )
 
     def __repr__(self):
         return f'<Book {self.title}>'
@@ -106,3 +119,13 @@ class Genre(db.Model):
             if isinstance(value, datetime):
                 genre_dict[key] = value.isoformat()  # Convert datetime to ISO string
         return genre_dict
+
+class Collection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    books = db.relationship(
+        'Book',
+        secondary=book_collection,
+        back_populates='collections'
+    )
