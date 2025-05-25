@@ -151,4 +151,14 @@ def delete_book(book_id):
     book = Book.query.get_or_404(book_id)
     db.session.delete(book)
     db.session.commit()
-    return jsonify({'status': 'success', 'message': 'Book deleted successfully'}), 200  
+    return jsonify({'status': 'success', 'message': 'Book deleted successfully'}), 200
+
+# GET /books/<int:book_id>/collections — List collections for a book
+@book_bp.route('/<int:book_id>/collections', methods=['GET'])
+def get_collections_for_book(book_id):
+    book = Book.query.get_or_404(book_id)
+    collections = book.collections
+    return jsonify([
+        {"id": c.id, "name": c.name, "description": c.description}
+        for c in collections
+    ])

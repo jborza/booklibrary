@@ -469,13 +469,3 @@ def update_books_api():
         db.session.commit()
 
     return jsonify({"status": "success", "message": "Books updated successfully"}), 200
-
-# GET /books/<int:book_id>/collections — List collections for a book
-@books_bp.route('/<int:book_id>/collections', methods=['GET'])
-def get_collections_for_book(book_id):
-    book = Book.query.get_or_404(book_id)
-    collections = book.collections
-    return jsonify([
-        {"id": c.id, "name": c.name, "description": c.description}
-        for c in collections
-    ])
