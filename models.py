@@ -45,8 +45,8 @@ class Book(db.Model):
     language = db.Column(db.String(20))  # Language of the book
     synopsis = db.Column(db.Text)
     review = db.Column(db.Text)
-    cover_image = db.Column(db.String(200))  # URL or path to the cover image
-    cover_image_tiny = db.Column(db.String(200))  # URL or path to the small version of cover image
+    cover_image = db.Column(db.String(300))  # URL or path to the cover image
+    cover_image_tiny = db.Column(db.String(300))  # URL or path to the small version of cover image
     page_count = db.Column(db.Integer)  # Number of pages for physical books
     series = db.Column(db.String(100))  # Series name if applicable
     tags = db.Column(db.String(200))  # Comma-separated tags for easy searching
