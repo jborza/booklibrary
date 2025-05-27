@@ -15,3 +15,4 @@ class BookFilter:
     rating_min: float = None
     rating_max: float = None
     language: str = None
+    collection: int = None
