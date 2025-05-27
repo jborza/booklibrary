@@ -76,6 +76,9 @@ def edit_book_api(book_id):
         db.session.add(author)
         db.session.commit()
     fill_book_data(book, data)
+    # sometimes the year is formatted like "2023-10-01", so we need to extract the year
+    if isinstance(book.year_published, str) and '-' in book.year_published:
+        book.year_published = book.year_published.split('-')[0]
     book.author = author
     # handle cover image URL
     if 'cover_image' in data and data['cover_image'] is not None and data['cover_image'].startswith('http'):
