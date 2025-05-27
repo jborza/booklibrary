@@ -67,7 +67,6 @@ def edit_book_api(book_id):
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid request, no JSON body found"}), 400
-    fill_book_data(book, data)
     # author data
     author = Author.query.filter_by(name=data['author_name']).first()
     if author is None:
@@ -76,6 +75,7 @@ def edit_book_api(book_id):
         fill_author_data(author, data['author_name'])
         db.session.add(author)
         db.session.commit()
+    fill_book_data(book, data)
     book.author = author
     # handle cover image URL
     if 'cover_image' in data and data['cover_image'] is not None and data['cover_image'].startswith('http'):
