@@ -30,15 +30,35 @@ def add_cover_images_tiny(book_list: list):
 
 @books_bp.route("/api/authors", methods=["GET"])
 def list_authors():
-    # TODO add filters
     book_type = request.args.get("type")
     book_status = request.args.get("status")
     search = request.args.get("search")
+    author = request.args.get("author")
+    genre = request.args.get("genre")
+    language = request.args.get("language")
+    series = request.args.get("series")
+    pages_min = request.args.get("pages_min")
+    pages_max = request.args.get("pages_max")
+    year_min = request.args.get("year_min")
+    year_max = request.args.get("year_max")
+    rating_min = request.args.get("rating_min")
+    rating_max = request.args.get("rating_max")
+    collection = request.args.get("collection")
     filter = BookFilter(
         search=search,
         book_type=book_type,
         book_status=book_status,
-        # TODO add other filters
+        author=author,
+        genre=genre,
+        language=language,
+        series=series,
+        rating_min=rating_min,
+        rating_max=rating_max,
+        pages_min=pages_min,
+        pages_max=pages_max,
+        year_min=year_min,
+        year_max=year_max,
+        collection=collection,
     )
     authors = get_authors(db.session, filter)
     return jsonify(authors), 200
@@ -223,6 +243,9 @@ def filter_books(query, filter: BookFilter):
         query = query.filter(Book.year_published >= filter.year_min)
     if filter.year_max:
         query = query.filter(Book.year_published <= filter.year_max)
+    if filter.collection:
+        # Filter by collection
+        query = query.join(Book.collections).filter(Book.collections.any(id=filter.collection))
 
     return query
 
@@ -256,6 +279,7 @@ def list_books_json():
         sort_column = request.args.get("sort_column")
     else:
         sort_column = Book.title
+    collection = request.args.get("collection")
     filter = BookFilter(
         search=search,
         book_type=book_type,
@@ -270,6 +294,7 @@ def list_books_json():
         pages_max=pages_max,
         year_min=year_min,
         year_max=year_max,
+        collection=collection,
     )
 
     # skip some columns
