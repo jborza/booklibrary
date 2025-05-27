@@ -228,10 +228,15 @@ def import_notes_api():
             format = PHYSICAL
         elif "audiobook" in line:
             format = AUDIOBOOK
-        # remove the format from the title
-        title = title.replace("pdf", "").replace("epub", "").replace("mobi","").replace("physical", "").replace("audiobook", "")
-        # also from the author name
-        author_name = author_name.replace("pdf", "").replace("epub", "").replace("mobi","").replace("physical", "").replace("audiobook", "")
+        elif "cbr" in line or "cbz" in line:
+            format = EBOOK
+        # remove the format from the title and author_name
+        extensions = "pdf epub mobi physical audiobook cbr cbz".split()
+        for ext in extensions:
+            if ext in title:
+                title = title.replace(ext, "").strip()
+            if ext in author_name:
+                author_name = author_name.replace(ext, "").strip()
 
         title = title.strip()
         author_name = author_name.strip()
