@@ -120,7 +120,7 @@ def import_csv_api():
                         pass
                 year_published = extract_year(row)
 
-                bookshelves = row.get('bookshelves')
+                bookshelves = row.get('exclusive shelf')
                 description = row.get('description')
                 language = row.get('language')
                 
