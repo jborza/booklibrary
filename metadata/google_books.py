@@ -6,6 +6,9 @@ load_dotenv()
 
 api_key = os.getenv('GOOGLE_BOOKS_API_KEY')
 
+def separate_genres(genres):
+    return ', '.join(item.strip() for item in genres.replace('&', ',').split(','))
+
 def get_googlebooks_data(query, count=1):
     url = "https://www.googleapis.com/books/v1/volumes"
     params = {"q": query, "key": api_key, "maxResults": count}
@@ -25,8 +28,10 @@ def get_googlebooks_data(query, count=1):
             "page_count": volume.get("pageCount"),
             "isbn": volume.get("industryIdentifiers", [{}])[0].get("identifier"),
             "genre": ','.join(volume.get("categories")) if volume.get("categories") else None,
+            "publisher": volume.get("publisher"),
+            "rating": volume.get("averageRating"),
         })
         # if genres are like Biography & Autobiography, replace & with ,
         if results[-1]['genre']:
-            results[-1]['genre'] = results[-1]['genre'].replace('&', ',').split(',')
+            results[-1]['genre'] = separate_genres(results[-1]['genre'])
     return results

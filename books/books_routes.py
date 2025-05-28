@@ -4,6 +4,7 @@ from authors.authors_tools import get_author_by_name
 from books.filters import BookFilter
 from books.search_options import NONE_OPTION
 from metadata.google_books import get_googlebooks_data
+from metadata.openlibrary import get_openlibrary_data_api
 from models import Author, Book, db
 from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
 
@@ -526,15 +527,14 @@ def match_books():
         book = Book.query.filter(Book.id == book_id).join(Author).first()
         if not book:
             return jsonify({"error": f"Book with ID {book_id} not found"}), 404
+        # ping search API with 1 result
+        if provider == "google_books":
+            results = get_googlebooks_data(f"{book.author.name} {book.title}", count=1)
+        else:
+            results = get_openlibrary_data_api(f"{book.author.name} {book.title}", count=1)
+        # Download the cover image and save it to a local directory
+        result = results[0] if results else None
         if match_covers:
-            # ping search API with 1 result
-            if provider == "google_books":
-                results = get_googlebooks_data(f"{book.author.name} {book.title}", count=1)
-            else:
-                from metadata.openlibrary import get_book_data_api
-                results = get_book_data_api(f"{book.author.name} {book.title}", count=1)
-            # Download the cover image and save it to a local directory
-            result = results[0] if results else None
             if not result or 'cover_image' not in result:
                 return jsonify({"error": f"No cover image found for book {book_id}"}), 404
             cover_image_url = result['cover_image']
@@ -542,6 +542,25 @@ def match_books():
                 cover_image = download_cover_image(cover_image_url)
                 book.cover_image = cover_image
                 book.cover_image_tiny = make_tiny_cover_image(cover_image)
-        # TODO implement metadata matching
+        if match_metadata:
+            if result:
+                book.title = result.get('title', book.title)
+                # TODO fix author
+                #book.author_name = result.get('author_name', book.author_name)
+                book.language = result.get('language', book.language)
+                book.year_published = result.get('year_published', book.year_published)
+                book.synopsis = result.get('synopsis', book.synopsis)
+                book.page_count = result.get('page_count', book.page_count)
+                book.isbn = result.get('isbn', book.isbn)
+                book.genre = result.get('genre', book.genre)
+                book.publisher = result.get('publisher', book.publisher)
+                book.rating = result.get('rating', book.rating)
+                # fix year_published if it's like '2020-01-01'
+                if book.year_published and isinstance(book.year_published, str):
+                    try:
+                        book.year_published = int(book.year_published.split('-')[0])
+                    except ValueError:
+                        book.year_published = None
+                              
         db.session.commit()
     return jsonify({"status": "success", "message": "Books matched successfully"}), 200

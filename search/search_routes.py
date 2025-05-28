@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from metadata.openlibrary import get_book_data_api
+from metadata.openlibrary import get_openlibrary_data_api
 from metadata.google_books import get_googlebooks_data
 
 search_bp = Blueprint('search', __name__, url_prefix='/search')
@@ -30,7 +30,7 @@ def search_openlibrary_api(count=1):
     # search with openlibrary API
     if query:
         # Call the Open Library API to get book data
-        results = get_book_data_api(query, count)
+        results = get_openlibrary_data_api(query, count)
     else:
         # If no query is provided, return an empty list or a message
         results = []
