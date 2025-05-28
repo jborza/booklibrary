@@ -306,6 +306,12 @@ def list_books_json():
         "status",
         "cover_image",
         "cover_image_tiny",
+        "genre",
+        "page_count",
+        "language",
+        "publisher",
+        "isbn",
+        "series"
     ]
     author_columns = ["name", "surname_first"]
     query = Book.query.join(Author)
