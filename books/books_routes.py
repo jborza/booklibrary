@@ -3,6 +3,7 @@ from sqlalchemy import func, or_
 from authors.authors_tools import get_author_by_name
 from books.filters import BookFilter
 from books.search_options import NONE_OPTION
+from metadata.google_books import get_googlebooks_data
 from models import Author, Book, db
 from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
 
@@ -502,3 +503,45 @@ def update_books_api():
         db.session.commit()
 
     return jsonify({"status": "success", "message": "Books updated successfully"}), 200
+
+@books_bp.route("/match_books_api", methods=["POST"])
+def match_books():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+    book_ids = data.get("book_ids", [])
+    if not book_ids:
+        return jsonify({"error": "No book IDs provided"}), 400
+    match_metadata = data.get("match_metadata", False)
+    match_covers = data.get("match_covers", False)
+    if not match_metadata and not match_covers:
+        return jsonify({"error": "No matching criteria provided"}), 400
+    provider = data.get("provider", "google_books")
+    if provider not in ["google_books", "openlibrary"]:
+        return jsonify({"error": "Invalid provider"}), 400
+    
+    # Loop through the book IDs and update each book
+    for book_id in book_ids:
+        # Find the book by ID
+        book = Book.query.filter(Book.id == book_id).join(Author).first()
+        if not book:
+            return jsonify({"error": f"Book with ID {book_id} not found"}), 404
+        if match_covers:
+            # ping search API with 1 result
+            if provider == "google_books":
+                results = get_googlebooks_data(f"{book.author.name} {book.title}", count=1)
+            else:
+                from metadata.openlibrary import get_book_data_api
+                results = get_book_data_api(f"{book.author.name} {book.title}", count=1)
+            # Download the cover image and save it to a local directory
+            result = results[0] if results else None
+            if not result or 'cover_image' not in result:
+                return jsonify({"error": f"No cover image found for book {book_id}"}), 404
+            cover_image_url = result['cover_image']
+            if cover_image_url:
+                cover_image = download_cover_image(cover_image_url)
+                book.cover_image = cover_image
+                book.cover_image_tiny = make_tiny_cover_image(cover_image)
+        # TODO implement metadata matching
+        db.session.commit()
+    return jsonify({"status": "success", "message": "Books matched successfully"}), 200

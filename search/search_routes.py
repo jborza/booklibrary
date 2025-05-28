@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from metadata.openlibrary import get_book_data_api
-from metadata.google_books import search
+from metadata.google_books import get_googlebooks_data
 
 search_bp = Blueprint('search', __name__, url_prefix='/search')
 
@@ -13,10 +13,7 @@ def search_google_books_api(count=1):
     query = request.args.get('search_query')
     if query:
         # Call the Google Books API to get book data
-        results = search(query, count)
-        print(results)
-        # display the results in a user-friendly format
-        # also show the image from results['cover_image']
+        results = get_googlebooks_data(query, count)
     else:
         # If no query is provided, return an empty list or a message
         results = []

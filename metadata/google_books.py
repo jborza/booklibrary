@@ -6,7 +6,7 @@ load_dotenv()
 
 api_key = os.getenv('GOOGLE_BOOKS_API_KEY')
 
-def search(query, count=1):
+def get_googlebooks_data(query, count=1):
     url = "https://www.googleapis.com/books/v1/volumes"
     params = {"q": query, "key": api_key, "maxResults": count}
     resp = requests.get(url, params=params)

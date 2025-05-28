@@ -2,7 +2,7 @@ from flask import Blueprint, flash, jsonify, redirect, request, url_for
 from authors.authors_tools import fill_author_data, get_author_by_name
 from models import Author, Book, db
 from metadata.openlibrary import get_book_data
-from metadata.google_books import search
+from metadata.google_books import get_googlebooks_data
 from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
 from sqlalchemy.orm import joinedload
 book_bp = Blueprint('book', __name__, url_prefix='/book')
@@ -130,7 +130,7 @@ def regenerate_thumbnail_google(book_id):
     book = Book.query.get_or_404(book_id)
     # construct the search query
     query = f"{book.author_name} {book.title}"
-    results = search(query)
+    results = get_googlebooks_data(query)
     result = download_thumbnail(book, results[0])
     if not result:
         return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
@@ -142,7 +142,7 @@ def match_book(book_id):
     book = Book.query.get_or_404(book_id)
     # construct the search query - search on google books now, but can on openlibrary too
     query = f"{book.author_name} {book.title}"
-    results = search(query, count=5)
+    results = get_googlebooks_data(query, count=5)
     if len(results) == 0:
         flash("No results found", 'error')
         return redirect(url_for('book.book_detail', book_id=book.id))
