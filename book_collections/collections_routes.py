@@ -83,3 +83,21 @@ def remove_book_from_collection(collection_id, book_id):
         db.session.commit()
     return jsonify({"message": "Book removed from collection."}), 200
 
+@collections_bp.route('/<int:collection_id>/delete_api', methods=['DELETE'])
+def delete_collection(collection_id):
+    collection = Collection.query.get_or_404(collection_id)
+    db.session.delete(collection)
+    db.session.commit()
+    return jsonify({"message": "Collection deleted."}), 200
+
+@collections_bp.route('/<int:collection_id>/rename_api', methods=['POST'])
+def rename_collection(collection_id):
+    collection = Collection.query.get_or_404(collection_id)
+    data = request.get_json()
+    if not data or 'name' not in data:
+        abort(400, description="Missing new collection name")
+    
+    collection.name = data['name']
+    collection.description = data.get('description', collection.description)
+    db.session.commit()
+    return jsonify({"id": collection.id, "name": collection.name, "description": collection.description}), 200
