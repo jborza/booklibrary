@@ -275,9 +275,8 @@ def list_books_json():
     rating_min = request.args.get("rating_min")
     rating_max = request.args.get("rating_max")
     sort_ascending = request.args.get("sort_ascending")
-    if "sort_column" in request.args:
-        sort_column = request.args.get("sort_column")
-    else:
+    sort_column = request.args.get("sort_column")
+    if not sort_column:
         sort_column = Book.title
     collection = request.args.get("collection")
     filter = BookFilter(
@@ -310,10 +309,13 @@ def list_books_json():
     ]
     author_columns = ["name", "surname_first"]
     query = Book.query.join(Author)
+    sort_column_sqlalchemy = getattr(Book, sort_column, None)
+    if sort_column in ['surname_first']:
+        sort_column_sqlalchemy = getattr(Author, sort_column, None)
     if sort_ascending == "true":
-        query = query.order_by(sort_column)
+        query = query.order_by(sort_column_sqlalchemy)
     else:
-        query = query.order_by(sort_column.desc())
+        query = query.order_by(sort_column_sqlalchemy.desc())
     # filter by book type and status
     query = filter_books(query, filter)
 
