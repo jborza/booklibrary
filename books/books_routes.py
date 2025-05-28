@@ -277,7 +277,7 @@ def list_books_json():
     sort_ascending = request.args.get("sort_ascending")
     sort_column = request.args.get("sort_column")
     if not sort_column:
-        sort_column = Book.title
+        sort_column = 'title'
     collection = request.args.get("collection")
     filter = BookFilter(
         search=search,
