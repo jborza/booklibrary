@@ -545,8 +545,6 @@ def match_books():
         if match_metadata:
             if result:
                 book.title = result.get('title', book.title)
-                # TODO fix author
-                #book.author_name = result.get('author_name', book.author_name)
                 book.language = result.get('language', book.language)
                 book.year_published = result.get('year_published', book.year_published)
                 book.synopsis = result.get('synopsis', book.synopsis)
@@ -561,6 +559,10 @@ def match_books():
                         book.year_published = int(book.year_published.split('-')[0])
                     except ValueError:
                         book.year_published = None
+                # Update author if author_name is provided
+                if result.get('author_name', book.author.name) != book.author.name:
+                    author = get_author_by_name(result['author_name'])
+                    book.author = author                 
                               
         db.session.commit()
     return jsonify({"status": "success", "message": "Books matched successfully"}), 200
