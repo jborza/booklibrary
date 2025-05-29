@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func, or_
-from authors.authors_tools import get_author_by_name
+from authors.authors_tools import capitalize_name, get_author_by_name
+from book.book_tools import format_title
 from books.filters import BookFilter
 from books.search_options import NONE_OPTION
 from metadata.google_books import get_googlebooks_data
@@ -523,6 +524,7 @@ def match_books():
     
     # Loop through the book IDs and update each book
     for book_id in book_ids:
+        print('Matching book with ID:', book_id)
         # Find the book by ID
         book = Book.query.filter(Book.id == book_id).join(Author).first()
         if not book:
@@ -544,7 +546,14 @@ def match_books():
                 book.cover_image_tiny = make_tiny_cover_image(cover_image)
         if match_metadata:
             if result:
+                # Update author if author_name is provided
+                name = result.get('author_name', book.author.name)
+                name = capitalize_name(name) 
+                if name != book.author.name:
+                    # for now, skip if the name changed, we probably got something completely different by suggestions
+                    continue                    
                 book.title = result.get('title', book.title)
+                book.title = format_title(book.title)  # Ensure title is formatted correctly
                 book.language = result.get('language', book.language)
                 book.year_published = result.get('year_published', book.year_published)
                 book.synopsis = result.get('synopsis', book.synopsis)
@@ -559,10 +568,7 @@ def match_books():
                         book.year_published = int(book.year_published.split('-')[0])
                     except ValueError:
                         book.year_published = None
-                # Update author if author_name is provided
-                if result.get('author_name', book.author.name) != book.author.name:
-                    author = get_author_by_name(result['author_name'])
-                    book.author = author                 
+           
                               
         db.session.commit()
     return jsonify({"status": "success", "message": "Books matched successfully"}), 200

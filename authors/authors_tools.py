@@ -45,3 +45,8 @@ def extract_main_author(author_string):
     # remove continuous spaces
     author = re.sub(r'\s+', ' ', author)
     return author
+
+def capitalize_name(name):
+    parts = [part.strip() for part in name.split('.')]  # Split on periods and strip whitespace
+    processed = [part.title() for part in parts]  # Capitalize each word in the part
+    return ' '.join(processed)  # Join with spaces for the final result
