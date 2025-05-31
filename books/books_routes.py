@@ -572,3 +572,28 @@ def match_books():
                               
         db.session.commit()
     return jsonify({"status": "success", "message": "Books matched successfully"}), 200
+
+@books_bp.route("/duplicate_title_api", methods=["GET"])
+def duplicate_title():
+# Subquery to find titles with duplicates
+    title_subquery = (Book.query
+                    .with_entities(Book.title)
+                    .group_by(Book.title)
+                    .having(func.count(Book.title) > 1)
+                    .subquery())
+
+    # Get all book IDs where the title is in the subquery
+    duplicate_books = (Book.query.join(Author)
+                        .filter(Book.title.in_(title_subquery))
+                        .with_entities(Book.id, Book.title, Author.name)
+                        .order_by(Book.title, Author.name)
+                        .all())
+    all_books = []
+    for row in duplicate_books:
+        data = {
+            "id": row.id,
+            "title": row.title,
+            "author_name": row.name
+        }
+        all_books.append(data)
+    return jsonify(all_books), 200
