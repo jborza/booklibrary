@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from metadata.openlibrary import get_openlibrary_data_api
 from metadata.google_books import get_googlebooks_data
+from metadata.amazon import get_amazon_data
+from metadata.goodreads import get_goodreads_data
 
 search_bp = Blueprint('search', __name__, url_prefix='/search')
 
@@ -46,8 +48,23 @@ def search_amazon_api(count=1):
     query = request.args.get('search_query')
     # search with amazon API
     if query:
-        from metadata.amazon import get_amazon_data
         results = get_amazon_data(query, count)
+    else:
+        # If no query is provided, return an empty list or a message
+        results = []
+    return jsonify(results)
+
+@search_bp.route('/goodreads_api')
+def search_goodreads_api(count=1):
+    count = request.args.get('count', default=1, type=int)
+    # limit to 10
+    if count > 10:
+        count = 10
+
+    query = request.args.get('search_query')
+    # search with goodreads API
+    if query:
+        results = get_goodreads_data(query, count)
     else:
         # If no query is provided, return an empty list or a message
         results = []
