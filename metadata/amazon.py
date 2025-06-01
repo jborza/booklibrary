@@ -29,9 +29,6 @@ def get_headers():
     }
     return headers
 
-def separate_genres(genres):
-    return ', '.join(item.strip() for item in genres.replace('&', ',').split(','))
-
 def get_amazon_data_list(query, count=1):
     url = f"https://www.amazon.com/s?k={query}&rh=n%3A154606011&ref=nb_sb_noss"
     # params = {"q": query, "key": api_key, "maxResults": count}
@@ -75,9 +72,9 @@ def get_amazon_data_list(query, count=1):
         # TODO getPageCount, language, series, publication date, publisher, isbn13, description
         results.append({
             'title': title,
+            'author': author_name,
             'thumbnail': thumbnail,
             'rating': rating,
-            'author': author_name,
         })
     return results
 
