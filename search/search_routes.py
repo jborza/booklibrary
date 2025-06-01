@@ -36,3 +36,19 @@ def search_openlibrary_api(count=1):
         results = []
     return jsonify(results)
 
+@search_bp.route('/amazon_api')
+def search_amazon_api(count=1):
+    count = request.args.get('count', default=1, type=int)
+    # limit to 10
+    if count > 10:
+        count = 10
+
+    query = request.args.get('search_query')
+    # search with amazon API
+    if query:
+        from metadata.amazon import get_amazon_data
+        results = get_amazon_data(query, count)
+    else:
+        # If no query is provided, return an empty list or a message
+        results = []
+    return jsonify(results)
