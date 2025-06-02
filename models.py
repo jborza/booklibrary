@@ -55,6 +55,7 @@ class Book(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)  # Date when the book was added
     remote_image_url = db.Column(db.String(400))  # URL of the remote image
     notes = db.Column(db.Text)  # Additional notes about the book
+    file_path = db.Column(db.String(300))  # Path to the book file (e.g., PDF, EPUB)
     # Add collections relationship
     collections = db.relationship(
         'Collection',

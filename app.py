@@ -26,11 +26,12 @@ from tools.fix import fix_bp
 from thumbnails.thumbnails_routes import thumbnails_bp
 from tools.ping_routes import ping_bp
 from book_collections.collections_routes import collections_bp
+from files.file_routes import files_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://booklibrary:booklibrary@localhost:3306/booklibrary'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'  # Use SQLite for simplicity
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://booklibrary:booklibrary@localhost:3306/booklibrary'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_hex(16) # Generate a random secret key
 db.init_app(app)
@@ -51,6 +52,7 @@ app.register_blueprint(fix_bp)
 app.register_blueprint(thumbnails_bp)
 app.register_blueprint(ping_bp)
 app.register_blueprint(collections_bp)
+app.register_blueprint(files_bp)
 
 @app.route('/')
 def home():
