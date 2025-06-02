@@ -27,6 +27,7 @@ from thumbnails.thumbnails_routes import thumbnails_bp
 from tools.ping_routes import ping_bp
 from book_collections.collections_routes import collections_bp
 from files.file_routes import files_bp
+from tools.import_path_routes import import_path_bp
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for all routes
@@ -53,6 +54,8 @@ app.register_blueprint(thumbnails_bp)
 app.register_blueprint(ping_bp)
 app.register_blueprint(collections_bp)
 app.register_blueprint(files_bp)
+app.register_blueprint(import_path_bp)
+
 
 @app.route('/')
 def home():
