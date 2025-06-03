@@ -9,3 +9,5 @@ CREATE USER booklibrary IDENTIFIED BY 'booklibrary';
 CREATE DATABASE booklibrary CHARACTER SET utf8mb4 COLLATE UTF8MB4_UNICODE_CI;
 GRANT ALL PRIVILEGES ON booklibrary.* TO 'booklibrary';
 ```
+
+To support retrieving metadata from imported books, install Calibre and have `ebook-meta` on the path.

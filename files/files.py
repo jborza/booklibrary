@@ -8,7 +8,7 @@ BOOK_FILENAME = 'book'
 
 def get_supported_extensions():
     # Returns a list of supported file extensions
-    return ['.pdf', '.epub', '.mobi', '.txt', '.azw3', '.htm', '.html']
+    return ['.pdf', '.epub', '.mobi', '.txt', '.azw3', '.htm', '.html', '.pdb', '.djvu', '.fb2']
 
 def save_book_file(book_id, file_obj, original_filename, supported_extensions):
     file_extension = os.path.splitext(original_filename)[1].lower()

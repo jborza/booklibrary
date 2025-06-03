@@ -3,8 +3,7 @@ from flask import Blueprint, request, jsonify, abort
 from authors.authors_tools import get_author_by_name
 from files.files import get_supported_extensions, save_book_file
 from models import Book, db
-from tools.metadata_pdf import get_metadata_pdf
-from tools.metadata_epub import get_metadata_epub
+from tools.metadata_calibre import get_metadata
 
 BASE_IMPORT_DIR = os.getcwd()  # Set the base import directory to the current working directory
 
@@ -74,16 +73,8 @@ def import_dir():
             # Here you can add logic to import the file
             # For now, we will just print the file path
             print(f"Found supported file: {file_path}")
-            # support getting author and title from the file - epub, pdf
-            # get the file extension and extract metadata
-            # TODO maybe it's easy for mobi and azw3 too?
-            file_extension = os.path.splitext(file_path)[1].lower()
-            if file_extension == '.pdf':
-                author, title = get_metadata_pdf(file_path)
-            elif file_extension == '.epub': #, '.mobi', '.azw3']:
-                author, title = get_metadata_epub(file_path)
-            else:
-                author, title = None, None
+            author, title = get_metadata(file_path)
+
             # try to get author and title from file name if metadata extraction fails
             if author is None or title is None:
                 just_filename = os.path.splitext(filename)[0]
@@ -91,7 +82,7 @@ def import_dir():
             if author is None:
                 # If we still don't have an author, we can set a default value
                 # Fallback to file name
-                author = "Unknown Author"
+                author = "Unknown"
                 title = os.path.splitext(filename)[0]
             # generate a Book object
             # the same code as in confirm_import_api()
@@ -112,7 +103,8 @@ def import_dir():
             dest_path = save_book_file(
                 book.id, f, os.path.basename(file_path), get_supported_extensions()
             )
-            book.file_path = dest_path
+            # take just the path relative to the base import directory
+            book.file_path = os.path.relpath(dest_path, BASE_IMPORT_DIR)
     added_ids = [book.id for book, _ in added_books]
     db.session.commit()
     return jsonify({
