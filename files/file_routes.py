@@ -54,17 +54,3 @@ def upload_book_file(book_id):
     book.file_path = path
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'File uploaded successfully'}), 200
-    # # save the file to the book's file_path
-    # file_extension = os.path.splitext(file.filename)[1].lower()
-    # supported_extensions = get_supported_extensions()
-    # if file_extension not in supported_extensions:
-    #     return jsonify({'error': 'Unsupported file type'}), 400
-    # # generate a file name
-    # path = f'{book_id}/{BOOK_FILENAME}{file_extension}'
-    # path = os.path.join(BOOKS_DIR, path)
-    # os.makedirs(os.path.dirname(path), exist_ok=True)
-    # file.save(path)
-    # book = Book.query.get_or_404(book_id)
-    # book.file_path = path
-    # db.session.commit()
-    # return jsonify({'status': 'success', 'message': 'File uploaded successfully'}), 200

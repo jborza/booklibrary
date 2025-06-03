@@ -100,11 +100,10 @@ def import_dir():
     # now upload the files - we can use the upload_book_file endpoint
     for book, file_path in added_books:
         with open(file_path, 'rb') as f:
+            book.file_path = os.path.basename(file_path)
             dest_path = save_book_file(
-                book.id, f, os.path.basename(file_path), get_supported_extensions()
+                book.id, f, book.file_path, get_supported_extensions()
             )
-            # take just the path relative to the base import directory
-            book.file_path = os.path.relpath(dest_path, BASE_IMPORT_DIR)
         # delete the original file
         os.remove(file_path)
 
