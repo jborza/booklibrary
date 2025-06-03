@@ -16,3 +16,4 @@ class BookFilter:
     rating_max: float = None
     language: str = None
     collection: int = None
+    book_ids: str = None # Comma-separated list of book IDs

@@ -249,6 +249,10 @@ def filter_books(query, filter: BookFilter):
     if filter.collection:
         # Filter by collection
         query = query.join(Book.collections).filter(Book.collections.any(id=filter.collection))
+    if filter.book_ids:
+        # Filter by book IDs
+        book_ids = [int(id) for id in filter.book_ids.split(",")]
+        query = query.filter(Book.id.in_(book_ids))
 
     return query
 
@@ -282,6 +286,7 @@ def list_books_json():
     if not sort_column:
         sort_column = 'title'
     collection = request.args.get("collection")
+    book_ids = request.args.get("book_ids", None)
     filter = BookFilter(
         search=search,
         book_type=book_type,
@@ -297,6 +302,7 @@ def list_books_json():
         year_min=year_min,
         year_max=year_max,
         collection=collection,
+        book_ids=book_ids,
     )
 
     # skip some columns
