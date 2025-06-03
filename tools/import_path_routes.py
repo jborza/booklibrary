@@ -1,14 +1,14 @@
 import os
-from flask import Blueprint, Flask, request, jsonify, abort
+from flask import Blueprint, request, jsonify, abort
+from authors.authors_tools import get_author_by_name
+from files.files import get_supported_extensions, save_book_file
+from models import Book, db
+from tools.metadata_pdf import get_metadata_pdf
+from tools.metadata_epub import get_metadata_epub
 
 BASE_IMPORT_DIR = os.getcwd()  # Set the base import directory to the current working directory
 
 import_path_bp = Blueprint('import_path', __name__, url_prefix='/import_path')
-
-@import_path_bp.route("/")
-def index():
-    cwd = os.getcwd()
-    return jsonify({"message": "Import Path API is running", "cwd":cwd}), 200
 
 def safe_join(base, *paths):
     # Prevents directory traversal attacks
@@ -46,3 +46,76 @@ def browse_dir():
         "parent_path": parent_path if parent_path != '.' else None,
         "directories": dirs
     })
+
+
+@import_path_bp.route('/import', methods=['GET'])
+def import_dir():
+    rel_path = request.args.get('path', '')
+    try:
+        abs_path = safe_join(BASE_IMPORT_DIR, rel_path)
+    except ValueError:
+        abort(400, "Invalid path")
+
+    if not os.path.isdir(abs_path):
+        abort(404, "Directory not found")
+
+    supported_extensions = get_supported_extensions()
+
+    added_books = [] # will store tuple of (book, file_path)
+
+    # List all files in the directory - but recursively
+    for root, dirs, files in os.walk(abs_path):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            # Process the file
+            # if it's not a supported file type, skip it
+            if not any(file_path.lower().endswith(ext) for ext in supported_extensions):
+                continue
+            # Here you can add logic to import the file
+            # For now, we will just print the file path
+            print(f"Found supported file: {file_path}")
+            # support getting author and title from the file - epub, pdf
+            # get the file extension and extract metadata
+            # TODO maybe it's easy for mobi and azw3 too?
+            file_extension = os.path.splitext(file_path)[1].lower()
+            if file_extension == '.pdf':
+                author, title = get_metadata_pdf(file_path)
+            elif file_extension == '.epub': #, '.mobi', '.azw3']:
+                author, title = get_metadata_epub(file_path)
+            else:
+                author, title = None, None
+            # try to get author and title from file name if metadata extraction fails
+            if author is None or title is None:
+                just_filename = os.path.splitext(filename)[0]
+                author, title = just_filename.split(' - ', 1) if ' - ' in just_filename else (None, None)
+            if author is None:
+                # If we still don't have an author, we can set a default value
+                # Fallback to file name
+                author = "Unknown Author"
+                title = os.path.splitext(filename)[0]
+            # generate a Book object
+            # the same code as in confirm_import_api()
+            author = get_author_by_name(author.strip())
+            new_book = Book()
+            new_book.author = author
+            new_book.title = title.strip()
+            db.session.add(new_book)
+            # copy the file to the books directory - we can use upload_book_file -
+            # but we don't have the book ID yet
+            added_book_info = (new_book, file_path)
+            added_books.append(added_book_info)
+    db.session.commit()
+    # after importing, get book IDs
+    # now upload the files - we can use the upload_book_file endpoint
+    for book, file_path in added_books:
+        with open(file_path, 'rb') as f:
+            dest_path = save_book_file(
+                book.id, f, os.path.basename(file_path), get_supported_extensions()
+            )
+            book.file_path = dest_path
+    added_ids = [book.id for book, _ in added_books]
+    db.session.commit()
+    return jsonify({
+        "message": "Books imported successfully",
+        "added_books": added_ids
+    }), 200

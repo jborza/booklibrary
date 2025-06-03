@@ -1,12 +1,11 @@
 from flask import abort, request, send_from_directory
 from flask import Blueprint, jsonify
+from files.files import BOOKS_DIR, get_supported_extensions, save_book_file
 from models import Book, db
 import os
 from werkzeug.utils import secure_filename
 
 files_bp = Blueprint('files', __name__, url_prefix='/files')
-BOOKS_DIR = os.path.abspath("books")
-os.makedirs(BOOKS_DIR, exist_ok=True)
 
 # endpoints - upload and download files
 # files can be book files and cover images
@@ -40,17 +39,32 @@ def upload_cover_image(book_id):
 
 @files_bp.route('/<int:book_id>/file', methods=['POST'])
 def upload_book_file(book_id):
-    book = Book.query.get_or_404(book_id)
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    # save the file to the book's file_path
-    path = f'{book.id}/{file.filename}'
-    path = os.path.join(BOOKS_DIR, path)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    file.save(path)
+    try:
+        path = save_book_file(
+            book_id, file, file.filename, get_supported_extensions()
+        )
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    book = Book.query.get_or_404(book_id)
     book.file_path = path
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'File uploaded successfully'}), 200
+    # # save the file to the book's file_path
+    # file_extension = os.path.splitext(file.filename)[1].lower()
+    # supported_extensions = get_supported_extensions()
+    # if file_extension not in supported_extensions:
+    #     return jsonify({'error': 'Unsupported file type'}), 400
+    # # generate a file name
+    # path = f'{book_id}/{BOOK_FILENAME}{file_extension}'
+    # path = os.path.join(BOOKS_DIR, path)
+    # os.makedirs(os.path.dirname(path), exist_ok=True)
+    # file.save(path)
+    # book = Book.query.get_or_404(book_id)
+    # book.file_path = path
+    # db.session.commit()
+    # return jsonify({'status': 'success', 'message': 'File uploaded successfully'}), 200

@@ -9,3 +9,5 @@ apscheduler
 PyMySQL
 cryptography
 beautifulsoup4
+ebooklib
+PyPDF2
