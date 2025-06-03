@@ -105,6 +105,9 @@ def import_dir():
             )
             # take just the path relative to the base import directory
             book.file_path = os.path.relpath(dest_path, BASE_IMPORT_DIR)
+        # delete the original file
+        os.remove(file_path)
+
     added_ids = [book.id for book, _ in added_books]
     db.session.commit()
     return jsonify({
