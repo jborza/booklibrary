@@ -32,17 +32,20 @@ def serve_book_file(book_id, filename):
 @files_bp.route('/<int:book_id>/cover', methods=['POST'])
 def upload_cover_image(book_id):
     book = Book.query.get_or_404(book_id)
-    if 'cover' not in request.files:
+    if 'file' not in request.files:
         return jsonify({'error': 'No cover image part'}), 400
-    cover = request.files['cover']
+    cover = request.files['file']
     if cover.filename == '':
         return jsonify({'error': 'No selected cover image'}), 400
     # save the cover image to the book's cover_image
-    path = f'{book.id}/{cover.filename}'
+    # rename the cover image to book_id/cover_image.jpg
+    ext = os.path.splitext(cover.filename)[1].lower()
+    path = f'{book.id}/cover{ext}'
     path = os.path.join(BOOKS_DIR, path)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     cover.save(path)
-    book.cover_image = path
+    filename = os.path.basename(path)
+    book.cover_image = filename
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'Cover image uploaded successfully'}), 200
 
