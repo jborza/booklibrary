@@ -533,6 +533,9 @@ def match_books():
         if not book:
             return jsonify({"error": f"Book with ID {book_id} not found"}), 404
         # ping search API with 1 result
+        if provider not in PROVIDER_LIST:
+            return jsonify({"error": "Invalid provider"}), 400
+
         function = PROVIDER_FUNCTIONS[provider]
         query = f"{book.author.name} {book.title}"
         results = function(query, count=1)
@@ -544,13 +547,13 @@ def match_books():
                 return jsonify({"error": f"No cover image found for book {book_id}"}), 404
             cover_image_url = result['cover_image']
             if cover_image_url:
-                cover_image = download_cover_image(cover_image_url)
+                cover_image = download_cover_image(book.id, cover_image_url)
                 book.cover_image = cover_image
         if match_metadata:
             if result:
                 # Update author if author_name is provided
                 name = result.get('author_name', book.author.name)
-                name = capitalize_name(name) 
+                name = capitalize_name(name)
                 if name != book.author.name:
                     # for now, skip if the name changed, we probably got something completely different by suggestions
                     continue                    
