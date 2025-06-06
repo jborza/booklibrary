@@ -9,7 +9,7 @@ api_key = os.getenv('GOOGLE_BOOKS_API_KEY')
 def separate_genres(genres):
     return ', '.join(item.strip() for item in genres.replace('&', ',').split(','))
 
-def get_googlebooks_data(query, count=1):
+def get_googlebooks_data_list(query, count=1):
     url = "https://www.googleapis.com/books/v1/volumes"
     params = {"q": query, "key": api_key, "maxResults": count}
     resp = requests.get(url, params=params)

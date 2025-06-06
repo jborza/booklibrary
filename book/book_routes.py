@@ -1,9 +1,8 @@
 from flask import Blueprint, flash, jsonify, redirect, request, url_for
 from authors.authors_tools import fill_author_data, get_author_by_name
+from metadata.providers import PROVIDER_AMAZON, PROVIDER_FUNCTIONS, PROVIDER_GOODREADS, PROVIDER_GOOGLE, PROVIDER_OPENLIBRARY
 from models import Author, Book, db
-from metadata.openlibrary import get_book_data
-from metadata.google_books import get_googlebooks_data
-from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
+from thumbnails.thumbnails import download_cover_image
 from sqlalchemy.orm import joinedload
 book_bp = Blueprint('book', __name__, url_prefix='/book')
 
@@ -86,20 +85,6 @@ def edit_book_api(book_id):
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'Book saved successfully'}), 200
 
-@book_bp.route('/<int:book_id>/openlibrary_search')
-def openlibrary_search(book_id):
-    book = Book.query.get_or_404(book_id)
-    # construct the search query
-    query = f"{book.title}"
-    results = get_book_data(query)
-    if len(results) == 0:
-        flash("No results found", 'error')
-        return redirect(url_for('book.book_detail', book_id=book.id))
-    # download the covers
-    download_thumbnail(book, results[0])
-    flash(f"Search completed", 'success')
-    return jsonify(results)
-
 def download_thumbnail(book, results):
     if 'cover_image' not in results:
         return False
@@ -107,42 +92,48 @@ def download_thumbnail(book, results):
     if cover_image_url is not None:
         if cover_image_url.startswith('http'):
             cover_image = download_cover_image(cover_image_url)
-            cover_image_tiny = make_tiny_cover_image(cover_image)
             # update the book object with the new cover image
             book.cover_image = cover_image
-            book.cover_image_tiny = cover_image_tiny
             db.session.commit()
             return True
 
-@book_bp.route('/<int:book_id>/regenerate_thumbnail', methods=['POST'])
-def regenerate_thumbnail(book_id):
+def regenerate_thumbnail(provider, book_id):
     book = Book.query.get_or_404(book_id)
     # construct the search query
-    query = f"{book.title}"
-    results = get_book_data(query)
+    query = f"{book.author_name} {book.title}"
+    function = PROVIDER_FUNCTIONS.get(provider)
+    results = function(query, count=1)
+
     result = download_thumbnail(book, results[0])
     if not result:
         return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
     return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200
+
+@book_bp.route('/<int:book_id>/regenerate_thumbnail_openlibrary', methods=['POST'])
+def regenerate_thumbnail(book_id):
+    return regenerate_thumbnail(PROVIDER_OPENLIBRARY, book_id)
 
 @book_bp.route('/<int:book_id>/regenerate_thumbnail_google', methods=['POST'])
 def regenerate_thumbnail_google(book_id):
-    book = Book.query.get_or_404(book_id)
-    # construct the search query
-    query = f"{book.author_name} {book.title}"
-    results = get_googlebooks_data(query)
-    result = download_thumbnail(book, results[0])
-    if not result:
-        return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
-    return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200
+    return regenerate_thumbnail(PROVIDER_GOOGLE, book_id)
 
-# an API version
+@book_bp.route('/<int:book_id>/regenerate_thumbnail_amazon', methods=['POST'])
+def regenerate_thumbnail_amazon(book_id):
+    return regenerate_thumbnail(PROVIDER_AMAZON, book_id)
+
+@book_bp.route('/<int:book_id>/regenerate_thumbnail_goodreads', methods=['POST'])
+def regenerate_thumbnail_goodreads(book_id):
+    return regenerate_thumbnail(PROVIDER_GOODREADS, book_id)
+
+# an API version - add provider
 @book_bp.route('/<int:book_id>/match', methods=['GET'])
 def match_book(book_id):
     book = Book.query.get_or_404(book_id)
-    # construct the search query - search on google books now, but can on openlibrary too
+    provider = request.args.get('provider', default=PROVIDER_GOOGLE, type=str)
+    # construct the search query
     query = f"{book.author_name} {book.title}"
-    results = get_googlebooks_data(query, count=5)
+    function = PROVIDER_FUNCTIONS.get(provider)
+    results = function(query, count=5)
     if len(results) == 0:
         flash("No results found", 'error')
         return redirect(url_for('book.book_detail', book_id=book.id))

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from sqlalchemy.orm.exc import NoResultFound
-from thumbnails.thumbnails import download_cover_image, make_tiny_cover_image
+from thumbnails.thumbnails import download_cover_image
 from models import db, Book
 
 downloader_bp = Blueprint('downloader', __name__, url_prefix='/download_book_covers')
@@ -19,7 +19,6 @@ def download_book_covers():
         return jsonify(message="Book has no remote_image_url"), 200
     cover_image = download_cover_image(url)
     book.cover_image = cover_image
-    book.cover_image_tiny = make_tiny_cover_image(cover_image)
     book.remote_image_url = None
     db.session.commit()
     return jsonify({"message": "Cover image downloaded and saved."}), 200

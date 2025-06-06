@@ -30,7 +30,7 @@ def get_headers():
     }
     return headers
 
-def get_goodreads_data_list(query):
+def get_goodreads_data(query):
     url = f"https://www.goodreads.com/search?q={query}&search_type=books"
     response = requests.get(url, headers=get_headers())
     html_content = response.text
@@ -71,8 +71,8 @@ def get_goodreads_data_list(query):
         })
     return results
 
-def get_goodreads_data(query, count=1):
-    list = get_goodreads_data_list(query)
+def get_goodreads_data_list(query, count=1):
+    list = get_goodreads_data(query)
     if not list:
         return None
     wanted_results = list[:count]

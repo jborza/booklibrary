@@ -4,10 +4,9 @@ from authors.authors_tools import capitalize_name, get_author_by_name
 from book.book_tools import format_title
 from books.filters import BookFilter
 from books.search_options import NONE_OPTION
-from metadata.google_books import get_googlebooks_data
-from metadata.openlibrary import get_openlibrary_data_api
+from metadata.providers import PROVIDER_FUNCTIONS, PROVIDER_GOOGLE, PROVIDER_LIST
 from models import Author, Book, db
-from thumbnails.thumbnails import make_tiny_cover_image, download_cover_image
+from thumbnails.thumbnails import download_cover_image
 
 books_bp = Blueprint("books", __name__, url_prefix="/books")
 
@@ -422,7 +421,6 @@ def add_book_api():
 
     # Download the cover image and save it to a local directory
     cover_image = download_cover_image(cover_image_url)
-    cover_image_tiny = make_tiny_cover_image(cover_image)
 
     # Create a new book
     book = Book(
@@ -437,7 +435,6 @@ def add_book_api():
         isbn=isbn,
         synopsis=synopsis,
         cover_image=cover_image,
-        cover_image_tiny=cover_image_tiny,
     )
     db.session.add(book)
 
@@ -524,10 +521,10 @@ def match_books():
     match_covers = data.get("match_covers", False)
     if not match_metadata and not match_covers:
         return jsonify({"error": "No matching criteria provided"}), 400
-    provider = data.get("provider", "google_books")
-    if provider not in ["google_books", "openlibrary"]:
+    provider = data.get("provider", PROVIDER_GOOGLE)
+    if provider not in PROVIDER_LIST:
         return jsonify({"error": "Invalid provider"}), 400
-    
+
     # Loop through the book IDs and update each book
     for book_id in book_ids:
         print('Matching book with ID:', book_id)
@@ -536,10 +533,10 @@ def match_books():
         if not book:
             return jsonify({"error": f"Book with ID {book_id} not found"}), 404
         # ping search API with 1 result
-        if provider == "google_books":
-            results = get_googlebooks_data(f"{book.author.name} {book.title}", count=1)
-        else:
-            results = get_openlibrary_data_api(f"{book.author.name} {book.title}", count=1)
+        function = PROVIDER_FUNCTIONS[provider]
+        query = f"{book.author.name} {book.title}"
+        results = function(query, count=1)
+
         # Download the cover image and save it to a local directory
         result = results[0] if results else None
         if match_covers:
@@ -549,7 +546,6 @@ def match_books():
             if cover_image_url:
                 cover_image = download_cover_image(cover_image_url)
                 book.cover_image = cover_image
-                book.cover_image_tiny = make_tiny_cover_image(cover_image)
         if match_metadata:
             if result:
                 # Update author if author_name is provided

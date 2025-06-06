@@ -47,7 +47,7 @@ def fetch_book_data_api(title, limit):
     except requests.RequestException as e:
         return []
 
-def get_book_data(title, count=1):
+def get_openlibrary_data(title, count=1):
     """
     Fetch book data from Open Library API based on the title.
     
@@ -66,7 +66,7 @@ def get_book_data(title, count=1):
     result = [fill_book_data(b) for b in book_data]
     return result
 
-def get_openlibrary_data_api(title, count=1):
+def get_openlibrary_data_list(title, count=1):
     """
     Fetch book data from Open Library API based on the title.
     

@@ -2,6 +2,7 @@ import hashlib
 from pathlib import Path
 from urllib.parse import urlparse
 import requests
+from files.files import BOOKS_DIR
 from models import Book, db
 from PIL import Image
 
@@ -11,23 +12,7 @@ THUMBNAIL_SIZE = (64, 64)  # Set the desired thumbnail size
 THUMBNAIL_SIZE_LARGE = (128, 200)
 
 
-def make_tiny_cover_image(cover_image):
-    original_image = Image.open(os.path.join("static", cover_image))
-    original_image.thumbnail(THUMBNAIL_SIZE)
-    thumb_name = "tiny_" + os.path.basename(cover_image)
-    original_image.save(os.path.join("static", "covers", thumb_name), format="JPEG")
-    return "covers/" + thumb_name  # Store relative path in DB
-
-def make_large_cover_image(cover_image, name):
-    original_image = Image.open( cover_image)
-    original_image.thumbnail(THUMBNAIL_SIZE_LARGE)
-    thumb_name = name
-    original_image = original_image.convert("RGB")
-    #thumb_name = "large_" + os.path.basename(cover_image)
-    original_image.save(os.path.join("static", "covers", thumb_name), format="JPEG")
-    return "covers/" + thumb_name  # Store relative path in DB
-
-def download_cover_image(cover_image_url):
+def download_cover_image(book_id, cover_image_url):
     """
     Download the cover image from the given URL and save it to a local directory.
 
@@ -41,20 +26,18 @@ def download_cover_image(cover_image_url):
         response = requests.get(cover_image_url, stream=True)
         response.raise_for_status()  # Raise HTTPError for bad responses
 
-        # Extract filename from URL # TODO hash - import hashlib - hashlib.sha1(sample_string.encode()).hexdigest()
-        filename = hashlib.sha1(cover_image_url.encode()).hexdigest() + ".jpg"
-        # maybe the file already exists
-        existing_file = os.path.join("./static", "covers", filename)
-        if os.path.exists(existing_file):
-            return "covers/" + filename  # Store relative path in DB
-        # Save the image to the 'covers' directory
-        os.makedirs("./static/covers", exist_ok=True)
-        filepath = os.path.join("./static", "covers", filename)
-        with open(filepath, "wb") as f:
+        # Extract filename from URL
+        # we suppose it's jpeg, not png
+        ext = '.jpg'
+        path = f'{book_id}/cover{ext}'
+        path = os.path.join(BOOKS_DIR, path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-        cover_image = "covers/" + filename  # Store relative path in DB
-        return cover_image
+
+        filename = os.path.basename(path)
+        return filename
     except requests.exceptions.RequestException as e:
         print(f"Error downloading cover image: {e}")
         return None

@@ -4,6 +4,7 @@ import urllib.request
 
 def request_cover_download():
     # just get /download_book_covers url
+    # TODO use Flask to find out the URL
     urllib.request.urlopen('http://localhost:5000/download_book_covers')
     return
 

@@ -9,7 +9,6 @@ files_bp = Blueprint('files', __name__, url_prefix='/files')
 
 # endpoints - upload and download files
 # files can be book files and cover images
-# TODO let's migrate book covers from the static folder to this endpoint
 
 @files_bp.route('/<book_id>/<filename>')
 def serve_book_file(book_id, filename):
