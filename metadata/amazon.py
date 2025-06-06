@@ -29,7 +29,7 @@ def get_headers():
     }
     return headers
 
-def get_amazon_data_list(query, count=1):
+def get_amazon_data(query, count=1):
     url = f"https://www.amazon.com/s?k={query}&rh=n%3A154606011&ref=nb_sb_noss"
     # params = {"q": query, "key": api_key, "maxResults": count}
     headers = get_headers()
@@ -64,7 +64,9 @@ def get_amazon_data_list(query, count=1):
         # Extract the rating; often found in a <span> with class 'a-icon-alt'
         rating_elem = item.find('span', class_='a-icon-alt')
         rating = rating_elem.get_text(strip=True) if rating_elem else "No Rating Found"
-
+        # rating is sometimes like "4.5 out of 5 stars", so we can just take the first part
+        if rating != "No Rating Found":
+            rating = rating.split(' ')[0]
         # Extract the author; this can vary based on the layout. Here we search for a link with a common class but you might need to adjust this selector.
         author_link = soup.find('a', class_='a-size-base a-link-normal s-underline-text s-underline-link-text s-link-style')
         author_name = author_link.get_text(strip=True) if author_link else "Author not found"
@@ -78,8 +80,8 @@ def get_amazon_data_list(query, count=1):
         })
     return results
 
-def get_amazon_data(query, count=1):
-    list = get_amazon_data_list(query, count)
+def get_amazon_data_list(query, count=1):
+    list = get_amazon_data(query, count)
     if not list:
         return None
     wanted_results = list[:count]
@@ -92,4 +94,3 @@ def get_amazon_data(query, count=1):
             'rating': item['rating'],
         })
     return results
-   
