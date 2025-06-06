@@ -40,9 +40,9 @@ def get_goodreads_data(query):
 
     # get a table of search results
     table = soup.find('table')
-
+    if not table:
+        return []  # No results found
     # get each <tr itemscope
-    # TODO load more results, it seems we're only getting the first result
     rows = table.find_all('tr', itemscope=True)
     results = []
     for row in rows:
