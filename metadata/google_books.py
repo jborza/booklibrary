@@ -17,6 +17,8 @@ def get_googlebooks_data_list(query, count=1):
     # ask for more results than needed, so we can sort
     if count < 10:
         queryCount = 10
+    else:
+        queryCount = count
     params = {"q": query, "key": api_key, "maxResults": queryCount}
     resp = requests.get(url, params=params)
     resp.raise_for_status()

@@ -81,6 +81,8 @@ def get_openlibrary_data_list(title, count=1):
     # ask for more results than needed, so we can sort
     if count < 10:
         queryCount = 10
+    else:
+        queryCount = count
     book_data = fetch_book_data_api(title, queryCount)
     if "error" in book_data:
         return book_data
