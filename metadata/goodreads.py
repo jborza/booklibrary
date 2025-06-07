@@ -2,6 +2,9 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from tools.levenshtein import sort_by_levenshtein_distance
+
+
 def get_headers():
     headers = {
         'accept': 'text/html, application/json',
@@ -75,9 +78,10 @@ def get_goodreads_data_list(query, count=1):
     list = get_goodreads_data(query)
     if not list:
         return None
-    wanted_results = list[:count]
+    # sort by levenshtein distance
+
     results = []
-    for item in wanted_results:
+    for item in list:
         results.append({
             'title': item['title'],
             'author_name': item['author'],
@@ -85,4 +89,7 @@ def get_goodreads_data_list(query, count=1):
             'rating': item['rating'],
             'year_published': item['publication_year'],
         })
+    results = sort_by_levenshtein_distance(results, query)
+    # return only the first 'count' results
+    results = results[:count]
     return results

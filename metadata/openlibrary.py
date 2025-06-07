@@ -5,6 +5,8 @@
 import requests
 import requests_cache
 
+from tools.levenshtein import sort_by_levenshtein_distance
+
 # Configure the cache
 cache_name = 'openlibrary_cache'
 expire_after = 3600  # Cache expires after 1 hour (3600 seconds)
@@ -76,14 +78,20 @@ def get_openlibrary_data_list(title, count=1):
     Returns:
         dict: A dictionary containing book data or an error message.
     """
-
-    book_data = fetch_book_data_api(title, count)
+    # ask for more results than needed, so we can sort
+    if count < 10:
+        queryCount = 10
+    book_data = fetch_book_data_api(title, queryCount)
     if "error" in book_data:
         return book_data
 
     # Extract relevant fields
-    result = [fill_book_data(b) for b in book_data]
-    return result
+    results = [fill_book_data(b) for b in book_data]
+    # sort by levenshtein distance
+    results = sort_by_levenshtein_distance(results, title)
+    # return only the first 'count' results
+    results = results[:count]
+    return results
 
 def fill_book_data(book_data):
     result = {

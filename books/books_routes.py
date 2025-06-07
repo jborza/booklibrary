@@ -533,9 +533,6 @@ def match_books():
         if not book:
             return jsonify({"error": f"Book with ID {book_id} not found"}), 404
         # ping search API with 1 result
-        if provider not in PROVIDER_LIST:
-            return jsonify({"error": "Invalid provider"}), 400
-
         function = PROVIDER_FUNCTIONS[provider]
         query = f"{book.author.name} {book.title}"
         results = function(query, count=1)
@@ -556,7 +553,7 @@ def match_books():
                 name = capitalize_name(name)
                 if name != book.author.name:
                     # for now, skip if the name changed, we probably got something completely different by suggestions
-                    continue                    
+                    continue
                 book.title = result.get('title', book.title)
                 book.title = format_title(book.title)  # Ensure title is formatted correctly
                 book.language = result.get('language', book.language)
