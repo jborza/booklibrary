@@ -100,42 +100,6 @@ def download_thumbnail(book, results):
         db.session.commit()
         return True
 
-def regenerate_thumbnail(provider, book_id):
-    book = Book.query.join(Book.author).filter(Book.id == book_id).first_or_404()
-    # construct the search query
-    query = f"{book.author.name} {book.title}"
-    if provider not in PROVIDER_LIST:
-        return jsonify({"error": "Invalid provider"}), 400
-
-    function = PROVIDER_FUNCTIONS.get(provider)
-    results = function(query, count=1)
-    if len(results) == 0:
-        return jsonify({'status': 'error', 'message': 'No results found'}), 404
-    result = download_thumbnail(book, results[0])
-    if not result:
-        return jsonify({'status': 'error', 'message': 'Thumbnail not found'}), 500
-    return jsonify({'status': 'success', 'message': 'Thumbnail regenerated successfully'}), 200
-
-@deprecated
-@book_bp.route('/<int:book_id>/regenerate_thumbnail_openlibrary', methods=['GET'])
-def regenerate_thumbnail_openlibrary(book_id):
-    return regenerate_thumbnail(PROVIDER_OPENLIBRARY, book_id)
-
-@deprecated
-@book_bp.route('/<int:book_id>/regenerate_thumbnail_google', methods=['GET'])
-def regenerate_thumbnail_google(book_id):
-    return regenerate_thumbnail(PROVIDER_GOOGLE, book_id)
-
-@deprecated
-@book_bp.route('/<int:book_id>/regenerate_thumbnail_amazon', methods=['GET'])
-def regenerate_thumbnail_amazon(book_id):
-    return regenerate_thumbnail(PROVIDER_AMAZON, book_id)
-
-@deprecated
-@book_bp.route('/<int:book_id>/regenerate_thumbnail_goodreads', methods=['GET'])
-def regenerate_thumbnail_goodreads(book_id):
-    return regenerate_thumbnail(PROVIDER_GOODREADS, book_id)
-
 # an API version
 @book_bp.route('/<int:book_id>/match', methods=['GET'])
 def match_book(book_id):
