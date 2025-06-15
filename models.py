@@ -1,7 +1,20 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import event
 db = SQLAlchemy()
+
+def compute_sortable_title(title):
+    t = title.strip()
+    tl = t.lower()
+    if tl.startswith('the '):
+        return t[4:].strip().lower()
+    elif tl.startswith('an '):
+        return t[3:].strip().lower()
+    elif tl.startswith('a '):
+        return t[2:].strip().lower()
+    return t.lower()
 
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +47,7 @@ book_collection = db.Table(
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
+    sortable_title = db.Column(db.String(200), nullable=False)  # Title used for sorting
     author_id = db.Column(db.Integer, db.ForeignKey('author.id'), nullable=False)  # Foreign key to Author
     author = db.relationship('Author', backref=db.backref('books', lazy=True))
     year_published = db.Column(db.Integer)
@@ -63,6 +77,14 @@ class Book(db.Model):
         back_populates='books'
     )
 
+    @hybrid_property
+    def computed_sortable_title(self):
+        if self.sortable_title:
+            return self.sortable_title
+        if self.title:
+            return compute_sortable_title(self.title)
+        return None
+
     def __repr__(self):
         return f'<Book {self.title}>'
     
@@ -76,6 +98,13 @@ class Book(db.Model):
             if isinstance(value, datetime):
                 book_dict[key] = value.isoformat()  # Convert datetime to ISO string
         return book_dict
+
+@event.listens_for(Book, 'before_insert')
+@event.listens_for(Book, 'before_update')
+def set_sortable_title(mapper, connection, target):
+    # Only set if title changed or sortable_title is missing
+    if target.title and (not target.sortable_title or target.sortable_title != compute_sortable_title(target.title)):
+        target.sortable_title = compute_sortable_title(target.title)
 
 class OtherBook(db.Model):
     id = db.Column(db.Integer, primary_key=True)
