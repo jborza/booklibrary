@@ -19,6 +19,9 @@ def get_metadata(filepath):
                 title = line.split(":", 1)[1].strip()
             elif line.startswith("Author(s)"):
                 author = line.split(":", 1)[1].strip()
+        #sometimes author includes author name in [ ] brackets, we can remove it
+        if author and '[' in author:
+            author = author.split('[')[0].strip()
         return author, title
     except Exception as e:
         print(f"Failed to extract metadata for {filepath}: {e}")

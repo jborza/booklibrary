@@ -87,13 +87,18 @@ def import_dir():
             # generate a Book object
             # the same code as in confirm_import_api()
             author = get_author_by_name(author.strip())
-            new_book = Book()
-            new_book.author = author
-            new_book.title = title.strip()
-            db.session.add(new_book)
+            # we should check if the same book already exists
+            existing_book = Book.query.filter_by(author_id=author.id, title=title.strip()).first()
+            if existing_book:
+                book = existing_book
+            else:
+                book = Book()
+            book.author = author
+            book.title = title.strip()
+            db.session.add(book)
             # copy the file to the books directory - we can use upload_book_file -
             # but we don't have the book ID yet
-            added_book_info = (new_book, file_path)
+            added_book_info = (book, file_path)
             added_books.append(added_book_info)
     db.session.commit()
     # after importing, get book IDs
