@@ -10,7 +10,7 @@ def get_metadata(filepath):
     try:
         result = subprocess.run(
             ["ebook-meta", filepath],
-            capture_output=True, text=True, check=True
+            capture_output=True, text=True, check=True, encoding='utf-8'
         )
         lines = result.stdout.splitlines()
         title = author = None
